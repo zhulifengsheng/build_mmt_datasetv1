@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>数据标注系统v2</title>
+  <!-- 下载到本地的bootstrap不好使，只能用线上的 -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+  <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}">
+</head>
+
+<body>
+
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand">数据标注系统</a>
+      </div>
+      <ul class="nav navbar-nav">
+        <li><a href="/show/1/">标注展示</a></li>
+        <!-- 登陆成功显示的内容 -->
+        {% if request.session.info.username %}
+        <li><a href="/api/to_annotation_without_image/">不看图片标注</a></li>
+        <li><a href="/api/to_annotation_with_image/">看图片标注</a></li>
+        <li><a href="/contrast/">标注对比</a></li>
+        <li><a href="/caption/">图片描述</a></li>
+        {% endif %}
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li id="login_text">
+          {% if request.session.info.username %}
+          <p class="navbar-text">你好，{{ request.session.info.username }}</p>
+          {% else %}
+          <!-- href="javascript:;"表示点击该a标签后不做任何跳转 -->
+          <a href="javascript:;" lay-active="login_btn"><span class="glyphicon glyphicon-log-in"></span> 登录</a>
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div style="text-align: center;">
+    <h1>欢迎访问</h1>
+  </div>
+
+  <script src="{% static 'layui/layui.js' %}"></script>
+  <script>
+    layui.use(['layer', 'jquery', 'util', 'form'], function () {
+      var layer = layui.layer,
+        $ = layui.$,
+        util = layui.util,
+        form = layui.form;
+
+      util.event('lay-active', {
+        'login_btn': function () {
+          layer.open({
+            type: 1,
+            resize: false,  // 不允许拉伸
+            area: '350px',
+            shadeClose: true, // 可以点击弹出层之外的区域来关闭弹出层
+            title: '登录',
+            content: [
+              '<ul class="layui-form layui-form-pane" style="margin: 15px;">',
+              '{% csrf_token %}',
+              '<li class="layui-form-item">',
+              '<label class="layui-form-label">用户名</label>',
+              '<div class="layui-input-block">',
+              '<input class="layui-input" lay-verify="required" name="username">',
+              '</div>',
+              '</li>',
+              '<li class="layui-form-item">',
+              '<label class="layui-form-label">密码</label>',
+              '<div class="layui-input-block">',
+              '<input class="layui-input" lay-verify="required" name="password">',
+              '</div>',
+              '</li>',
+              '<li class="layui-form-item" style="text-align:center;">',
+              // lay-filter 类似于id，用于事件监听
+              '<button type="submit" lay-submit lay-filter="login" class="layui-btn">提交</button>',
+              '</li>',
+              '</ul>'].join(''),
+            success: function (layero, index) { // 弹出层执行成功后，可执行下面的代码
+              // 点击提交，发送数据给后端
+              form.render().on('submit(login)', function (data) {
+                $.ajax({
+                  url: "/api/login/",
+                  data: data.field,  // 数据字典
+                  async: true,
+                  cache: false,
+                  type: "POST",
+                  dataType: "json",
+                  success: function (result) {
+                    if (result['is_user']) {
+                      layer.msg('登录成功！', { icon: 1 });
+                      // 登录成功之后的操作
+                      setTimeout(function () {
+                        location.reload();
+                      }, 1500);
+                    }
+                    else {
+                      layer.msg('用户名或密码错误！', { icon: 2 });
+                    }
+                  }
+                }); //ajax结束
+                layer.close(index); //关闭弹出层
+              }); // submit数据发送结束
+            } //弹出层执行成功后，代码体执行结束
+          }); //弹出层结束
+        } //login_btn事件结束
+      }); //所有事件结束
+    });
+  </script>
+</body>
+
+</html>
