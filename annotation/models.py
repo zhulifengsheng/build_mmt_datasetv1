@@ -33,6 +33,7 @@ class Caption(models.Model):
     # id
     caption_NO = models.PositiveSmallIntegerField(verbose_name='第几个描述')    # 1-7
     caption = models.TextField(verbose_name='英文描述')
+    zh_machine_translation = models.TextField(verbose_name='机器翻译')
 
 class ZhWithoutImage(models.Model):
     pass
