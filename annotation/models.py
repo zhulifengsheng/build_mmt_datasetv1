@@ -8,7 +8,7 @@ from django.db import models
 # python3 manage.py migrate
 
 # 特殊情况的处理方法
-# alter table annotation_caption1 auto_increment 1;
+# alter table annotation_caption auto_increment 1;
 # python3 manage.py makemigrations --empty annotation
 
 class RandomImageID(models.Model):
