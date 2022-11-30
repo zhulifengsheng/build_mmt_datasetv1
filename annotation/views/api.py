@@ -1,19 +1,22 @@
 from django.http import Http404, JsonResponse
 
+from annotation.models import User
+
+# finish
 def login(request):
     if request.is_ajax() and request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        # res = User.objects.filter(username=username, password=password)
-        # if res.exists():
-        #     # save session
-        #     request.session["info"] = {'username': res.first().username}
-        #     is_user = True
-        # else:   
-        #     is_user = False
+        res = User.objects.filter(username=username, password=password)
+        if res.exists():
+            # save session
+            request.session["info"] = {'username': username}
+            is_user = True
+        else:   
+            is_user = False
         
         context = {
-            'is_user': True, #is_user,
+            'is_user': is_user,
             'username': username,
         }
         return JsonResponse(context)

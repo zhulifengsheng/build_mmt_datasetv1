@@ -15,12 +15,13 @@ Including another URLconf
 """
 # from django.contrib import admin
 from django.urls import path
-from annotation.views import show, api, first_page
+from annotation.views import show, api, first_page, management
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('', first_page.first_page),
     path('show/<int:image_id>/', show.show),
+    path('management/', management.management),
 
     # API
     path('api/show_zh_table/', api.show_zh_table),
