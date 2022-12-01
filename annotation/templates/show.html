@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>数据标注系统</title>
+  <title>标注展示</title>
   <!-- 下载到本地的bootstrap不好使，只能用线上的 -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
     integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
@@ -51,8 +51,10 @@
         {% if request.session.info.username %}
         <li><a href="/api/to_annotation_without_image/">不看图片标注</a></li>
         <li><a href="/api/to_annotation_with_image/">看图片标注</a></li>
-        <li><a href="/contrast/">标注对比</a></li>
-        <li><a href="/caption/">图片描述</a></li>
+        {% endif %}
+        {% if is_admin %}
+        <li><a href="/check_annotation/">查看标注</a></li>
+        <li><a href="/management/">后台管理</a></li>
         {% endif %}
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -70,7 +72,7 @@
   <div class="layui-container">
     <div class="layui-row">
       <div class="layui-col-xs5" style="text-align: center;">
-        <div class="layui-anim layui-anim-scale">
+        <div class="layui-anim layui-anim-scale" style="text-align: center;">
           <img id="img" src={% static image_name %} class="img-thumbnail">
         </div>
       </div>

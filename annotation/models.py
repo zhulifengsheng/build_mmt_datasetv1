@@ -38,6 +38,13 @@ class User(models.Model):
     start_index_with_image = models.PositiveIntegerField(verbose_name='从哪个开始标注', default=1)
     is_admin = models.BooleanField(verbose_name='是否是管理员', default=False)
 
+# class RandomCaptionID(models.Model):
+#     '''
+#     做第一阶段不看图片标注的任务时，用Caption ID来挑出要标注哪个英文描述
+#     '''
+#     random_captionID_id = models.BigAutoField(verbose_name='Random_CaptionID ID', primary_key=True)
+#     caption_id = models.PositiveIntegerField(verbose_name='Caption ID', unique=True)
+
 class Caption(models.Model):
     caption_id = models.BigAutoField(verbose_name='Caption ID', primary_key=True)
     caption_NO = models.PositiveSmallIntegerField(verbose_name='第几个描述')    # 1-7

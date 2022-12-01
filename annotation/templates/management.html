@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>后台管理系统</title>
+  <title>后台管理</title>
   <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}">
   <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
 </head>
@@ -13,13 +13,19 @@
 <body>
   <div class="layui-layout layui-layout-admin">
     <div class="layui-header">
-      <div class="layui-logo layui-hide-xs layui-bg-black">后台管理</div>
+      <div class="layui-logo layui-hide-xs layui-bg-black">数据标注系统</div>
       <!-- 头部区域（可配合layui 已有的水平导航） -->
       <ul class="layui-nav layui-layout-left">
         <!-- 移动端显示 -->
         <li class="layui-nav-item layui-show-xs-inline-block layui-hide-sm" lay-header-event="menuLeft">
           <i class="layui-icon layui-icon-spread-left"></i>
         </li>
+
+        <li class="layui-nav-item layui-hide-xs"><a href="/show/1/">标注展示</a></li>
+        <li class="layui-nav-item layui-hide-xs"><a href="/api/to_annotation_without_image/">不看图片标注</a></li>
+        <li class="layui-nav-item layui-hide-xs"><a href="/api/to_annotation_with_image/">看图片标注</a></li>
+        <li class="layui-nav-item layui-hide-xs"><a href="/check_annotation/">查看标注</a></li>
+        <li class="layui-nav-item layui-hide-xs"><a href="/management/">后台管理</a></li>
       </ul>
     </div>
 
@@ -30,15 +36,36 @@
           <!-- 添加用户 -->
           <!-- 给用户分配任务量 -->
           <li class="layui-nav-item"><a href="javascript:;">用户管理</a></li>
-          <!-- 添加数据 -->
           <li class="layui-nav-item"><a href="javascript:;">数据管理</a></li>
         </ul>
       </div>
     </div>
 
     <div class="layui-body">
-      <!-- 内容主体区域 -->
-      <div style="padding: 15px;">内容主体区域。记得修改 layui.css 和 js 的路径</div>
+      <form class="layui-form" action="" style="padding-top: 20px;">
+        <div class="layui-inline">
+          <label class="layui-form-label">用户</label>
+          <div class="layui-input-inline">
+            <select name="modules" lay-verify="required" lay-search="">
+              <option value="">直接选择或搜索选择</option>
+              {% for username in usernames %}
+              <option value="{{ forloop.counter }}">{{ username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        不看图片标注
+        已分配的总任务量 已完成的任务量</br>
+        看图片标注
+        已分配的总任务量
+        <div class="layui-inline">
+          <div class="layui-input-block">
+            <div class="layui-input-inline">
+              <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
 
   </div>

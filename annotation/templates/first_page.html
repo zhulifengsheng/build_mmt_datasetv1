@@ -26,8 +26,10 @@
         {% if request.session.info.username %}
         <li><a href="/api/to_annotation_without_image/">不看图片标注</a></li>
         <li><a href="/api/to_annotation_with_image/">看图片标注</a></li>
-        <li><a href="/contrast/">标注对比</a></li>
-        <li><a href="/caption/">图片描述</a></li>
+        {% endif %}
+        {% if is_admin %}
+        <li><a href="/check_annotation/">查看标注</a></li>
+        <li><a href="/management/">后台管理</a></li>
         {% endif %}
       </ul>
       <ul class="nav navbar-nav navbar-right">

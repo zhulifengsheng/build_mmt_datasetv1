@@ -1,5 +1,5 @@
-from django.http import Http404, JsonResponse
-
+from django.http import Http404, JsonResponse, HttpResponse
+from django.shortcuts import redirect
 from annotation.models import User, Caption
 
 # finish
@@ -34,7 +34,7 @@ def show_zh_table(request):
             
             # TODO
             dic['zh_without_image'] = '未标注'
-            dic['zh_with_image'] = '未标注'
+            dic['zh_with_image'] = 'TODO'
 
             dic['id'] = caption_obj.caption_NO
             data.append(dic)
@@ -45,7 +45,7 @@ def show_zh_table(request):
         }
         return JsonResponse(context)
 
-    raise Http404("非法访问了该api")
+    raise Http404("非ajax访问了该api")
 
 def show_en_table(request):
     if request.is_ajax() and request.method == 'POST':
@@ -65,4 +65,14 @@ def show_en_table(request):
         }
         return JsonResponse(context)
 
-    raise Http404("非法访问了该api")
+    raise Http404("非ajax访问了该api")
+
+def to_annotation_without_image(request):
+    username = request.session.get("info")['username']
+    # 根据用户名找到用户需要标注第几个caption
+    now_index_without_image = User.objects.get(username=username).now_index_without_image
+    now_index_without_image = 1
+    if now_index_without_image == 0:
+        return HttpResponse("您暂时没有不看图片标注译文的任务")
+    else:
+        return redirect('/annotation_without_image/{}/'.format(now_index_without_image))

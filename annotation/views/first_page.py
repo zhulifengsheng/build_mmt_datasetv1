@@ -1,8 +1,13 @@
 from django.shortcuts import render
 
-from annotation.models import Caption, Image, RandomImageID
+from annotation.models import Caption, Image, RandomImageID, User
 
 def first_page(request):
+    '''
+    首页
+    '''
+    # User.objects.create(username="lch", password="lv12345", is_admin=True)
+
     # import random
     # x = list(range(1, 123288))
     # random.shuffle(x)
@@ -27,5 +32,12 @@ def first_page(request):
     #     Caption.objects.create(caption_NO=no, caption=l1, zh_machine_translation=l2, image_obj=Image.objects.filter(image_id=idx).first())
     #     no += 1
 
-    # 首页
-    return render(request, 'first_page.html')
+    is_admin = False
+    if request.session.get("info") is not None and 'username' in request.session.get("info"):
+        user_obj = User.objects.get(username=request.session.get("info")['username'])
+        is_admin = user_obj.is_admin
+    
+    res = {
+        'is_admin': is_admin,
+    }
+    return render(request, 'first_page.html', res)
