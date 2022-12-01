@@ -68,11 +68,12 @@ def show_en_table(request):
     raise Http404("非ajax访问了该api")
 
 def to_annotation_without_image(request):
-    username = request.session.get("info")['username']
     # 根据用户名找到用户需要标注第几个caption
-    now_index_without_image = User.objects.get(username=username).now_index_without_image
-    now_index_without_image = 1
-    if now_index_without_image == 0:
+    user_obj = User.objects.get(username=request.session.get("info")['username'])
+    now_index_without_image = user_obj.now_index_without_image
+    total_amount_without_image = user_obj.total_amount_without_image
+
+    if now_index_without_image > total_amount_without_image:
         return HttpResponse("您暂时没有不看图片标注译文的任务")
     else:
         return redirect('/annotation_without_image/{}/'.format(now_index_without_image))

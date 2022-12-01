@@ -6,19 +6,23 @@ def first_page(request):
     '''
     首页
     '''
+    # 创建用户
     # User.objects.create(username="lch", password="lv12345", is_admin=True)
 
+    # 载入图片信息
+    # dir = 'D:\\coco\\coco_caption\\images.txt'
+    # with open(dir, 'r', encoding='utf-8') as f:
+    #     for l in f:
+    #         Image.objects.create(image_name=l.strip())
+
+    # 建立随机图片数据
     # import random
     # x = list(range(1, 123288))
     # random.shuffle(x)
     # for i in x:
     #     RandomImageID.objects.create(image_id=i)
 
-    # dir = 'D:\\coco\\coco_caption\\images.txt'
-    # with open(dir, 'r', encoding='utf-8') as f:
-    #     for l in f:
-    #         Image.objects.create(image_name=l.strip())
-
+    # 载入英文描述及其机翻的信息
     # f1 = open('D:\\coco\\coco_caption\\captions.txt', 'r', encoding='utf-8')
     # f2 = open('D:\\coco\\coco_caption\\captions_translation.txt', 'r', encoding='utf-8')
     # idx, no = 1, 1
@@ -28,9 +32,10 @@ def first_page(request):
     #         no = 1
     #         idx += 1
     #         continue
-        
     #     Caption.objects.create(caption_NO=no, caption=l1, zh_machine_translation=l2, image_obj=Image.objects.filter(image_id=idx).first())
     #     no += 1
+
+    # 建立随机的Caption数据顺序
 
     is_admin = False
     if request.session.get("info") is not None and 'username' in request.session.get("info"):

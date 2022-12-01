@@ -21,7 +21,7 @@ urlpatterns = [
     # path('admin/', admin.site.urls),
     path('', first_page.first_page),
     path('show/<int:image_id>/', show.show),
-    path('annotation_without_image/<int:caption_id>/', annot.annotation_without_image),
+    path('annotation_without_image/<int:index_without_image>/', annot.annotation_without_image),
     # path('annotation_with_image/<int:caption_id>/', annot.annotation_with_image),
 
     path('management/', management.management),
@@ -31,6 +31,6 @@ urlpatterns = [
     path('api/show_zh_table/', api.show_zh_table),
     path('api/show_en_table/', api.show_en_table),
     # 获取当前用户的标注任务信息，并在后端进行重定向的跳转
-    # path('api/to_annotation_with_image/', api.to_annotation_with_image),
     path('api/to_annotation_without_image/', api.to_annotation_without_image),
+    # path('api/to_annotation_with_image/', api.to_annotation_with_image),
 ]

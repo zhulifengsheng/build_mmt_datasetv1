@@ -11,6 +11,8 @@ from django.db import models
 # alter table annotation_caption auto_increment 1;
 # python3 manage.py makemigrations --empty annotation
 
+_MAX = 10000    # 计划标注1W张图片
+
 class RandomImageID(models.Model):
     '''
     给123287张图片随机打乱顺序
@@ -28,22 +30,23 @@ class User(models.Model):
     password = models.CharField(verbose_name='密码', max_length=10)
     
     # 不看图片标注（与caption_id对应）
-    now_index_without_image = models.PositiveIntegerField(verbose_name='该标注哪个了', default=0)    # 没有被分配过任务时，初始化为0
-    total_amount_without_image = models.PositiveIntegerField(verbose_name='计划标注的总量', default=0)
-    start_index_without_image = models.PositiveIntegerField(verbose_name='从哪个开始标注', default=1)
+    now_index_without_image = models.PositiveIntegerField(verbose_name='该标注哪个了', default=1)    # 没有被分配过任务时，初始化为0
+    total_amount_without_image = models.PositiveIntegerField(verbose_name='标注的总量', default=0)
 
     # 看图片标注（与zh_without_image_id对应）
-    now_index_with_image = models.PositiveIntegerField(verbose_name='该标注哪个了', default=0)    # 没有被分配过任务时，初始化为0
-    total_amount_with_image = models.PositiveIntegerField(verbose_name='计划标注的总量', default=0)
-    start_index_with_image = models.PositiveIntegerField(verbose_name='从哪个开始标注', default=1)
+    now_index_with_image = models.PositiveIntegerField(verbose_name='该标注哪个了', default=1)    # 没有被分配过任务时，初始化为0
+    total_amount_with_image = models.PositiveIntegerField(verbose_name='标注的总量', default=0)
+    
     is_admin = models.BooleanField(verbose_name='是否是管理员', default=False)
 
-# class RandomCaptionID(models.Model):
-#     '''
-#     做第一阶段不看图片标注的任务时，用Caption ID来挑出要标注哪个英文描述
-#     '''
-#     random_captionID_id = models.BigAutoField(verbose_name='Random_CaptionID ID', primary_key=True)
-#     caption_id = models.PositiveIntegerField(verbose_name='Caption ID', unique=True)
+class FirstStageWorkPool(models.Model):
+    '''
+    第一阶段工作池，根据_MAX最大标注的图片数量，这个第一阶段任务的标注数量也会是固定的
+    '''
+    # 默认主键id
+    caption_obj = models.ForeignKey(to="Caption", to_field="caption_id", on_delete=models.CASCADE)
+    user_obj = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)  # 那个用户对该英文描述进行不看图片译文标注
+    is_finished = models.BooleanField(verbose_name='这个标注是否完成了', default=False)
 
 class Caption(models.Model):
     caption_id = models.BigAutoField(verbose_name='Caption ID', primary_key=True)
