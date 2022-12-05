@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/login/', api.login),
     path('api/show_zh_table/', api.show_zh_table),
     path('api/show_en_table/', api.show_en_table),
+    path('api/show_management_table/', api.show_management_table),
     # 获取当前用户的标注任务信息，并在后端进行重定向的跳转
     path('api/to_annotation_without_image/', api.to_annotation_without_image),
     # path('api/to_annotation_with_image/', api.to_annotation_with_image),

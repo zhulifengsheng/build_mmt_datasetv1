@@ -41,41 +41,154 @@
       </div>
     </div>
 
-    <div class="layui-body">
-      <form class="layui-form" action="" style="padding-top: 20px;">
-        <div class="layui-inline">
-          <label class="layui-form-label">用户</label>
-          <div class="layui-input-inline">
-            <select name="modules" lay-verify="required" lay-search="">
-              <option value="">直接选择或搜索选择</option>
-              {% for username in usernames %}
-              <option value="{{ forloop.counter }}">{{ username }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        不看图片标注
-        已分配的总任务量 已完成的任务量</br>
-        看图片标注
-        已分配的总任务量
-        <div class="layui-inline">
-          <div class="layui-input-block">
-            <div class="layui-input-inline">
-              <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
-            </div>
-          </div>
-        </div>
-      </form>
+    <div class="layui-body" style="width: 70%; margin: auto;">
+      <table id="demo" lay-filter="test"></table>
     </div>
 
   </div>
+
+  <script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">添加任务量</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除任务量</a>
+  </script>
+
   <script src="{% static 'layui/layui.js' %}"></script>
   <script>
-    layui.use(['element', 'layer', 'util'], function () {
+    layui.use(['element', 'layer', 'util', 'table', 'form'], function () {
       var element = layui.element
+        , table = layui.table
         , layer = layui.layer
         , util = layui.util
+        , form = layui.form
         , $ = layui.$;
+
+      // 设置ajax POST请求需要csrf
+      function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+      }
+      $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+          if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+          }
+        }
+      });
+
+      //执行渲染
+      table.render({
+        elem: '#demo' //指定原始表格元素选择器（推荐id选择器）
+        , cellMinWidth: 80
+        , cols: [[
+          { field: 'username', title: '用户名', unresize: true, width: 80 },
+          { field: 'first1', title: '第一阶段已完成任务', unresize: true, width: 180 },
+          { field: 'first2', title: '第一阶段待完成任务', unresize: true, width: 180 },
+          { field: 'second1', title: '第二阶段已完成任务', unresize: true, width: 180 },
+          { field: 'second2', title: '第二阶段待完成任务', unresize: true, width: 180 },
+          { fixed: 'right', title: '操作', width: 280, minWidth: 240, toolbar: '#barDemo' }
+        ]] //设置表头
+        , url: '/api/show_management_table/'
+        , method: 'post'
+      });
+
+      //触发单元格工具事件
+      table.on('tool(test)', function (obj) { // 双击 toolDouble
+        var data = obj.data;
+        //console.log(obj)
+        if (obj.event === 'del') {
+          layer.open({
+            type: 1,
+            resize: false,  // 不允许拉伸
+            area: '350px',
+            shadeClose: true, // 可以点击弹出层之外的区域来关闭弹出层
+            title: '删除任务量',
+            content: [
+              '<ul class="layui-form layui-form-pane" style="margin: 15px;">',
+              '<li class="layui-form-item">',
+              '<label class="layui-form-label">个数</label>',
+              '<div class="layui-input-block">',
+              '<input class="layui-input" lay-verify="required" name="number">',
+              '</div>',
+              '</li>',
+              '<li class="layui-form-item" style="text-align:center;">',
+              '<button type="submit" lay-submit lay-filter="del" class="layui-btn">提交</button>',
+              '</li>',
+              '</ul>'].join(''),
+            success: function (layero, index) { // 弹出层执行成功后，可执行下面的代码
+              // 点击提交，发送数据给后端
+              form.render().on('submit(del)', function (data) {
+                $.ajax({
+                  url: "/api/management_del/",
+                  data: data.field,  // 数据字典
+                  async: true,
+                  cache: false,
+                  type: "POST",
+                  dataType: "json",
+                  success: function (result) {
+                    if (result['is_user']) {
+                      layer.msg('添加成功！', { icon: 1 });
+                      // 登录成功之后的操作
+                      setTimeout(function () {
+                        location.reload();
+                      }, 1500);
+                    }
+                    else {
+                      layer.msg('添加失败！', { icon: 2 });
+                    }
+                  }
+                }); //ajax结束
+                layer.close(index); //关闭弹出层
+              }); // submit数据发送结束
+            }
+          });
+        } else if (obj.event === 'edit') {
+          layer.open({
+            type: 1,
+            resize: false,  // 不允许拉伸
+            area: '350px',
+            shadeClose: true, // 可以点击弹出层之外的区域来关闭弹出层
+            title: '添加任务量',
+            content: [
+              '<ul class="layui-form layui-form-pane" style="margin: 15px;">',
+              '<li class="layui-form-item">',
+              '<label class="layui-form-label">个数</label>',
+              '<div class="layui-input-block">',
+              '<input class="layui-input" lay-verify="required" name="number">',
+              '</div>',
+              '</li>',
+              '<li class="layui-form-item" style="text-align:center;">',
+              '<button type="submit" lay-submit lay-filter="add" class="layui-btn">提交</button>',
+              '</li>',
+              '</ul>'].join(''),
+            success: function (layero, index) { // 弹出层执行成功后，可执行下面的代码
+              // 点击提交，发送数据给后端
+              form.render().on('submit(add)', function (data) {
+                $.ajax({
+                  url: "/api/management_add/",
+                  data: data.field,  // 数据字典
+                  async: true,
+                  cache: false,
+                  type: "POST",
+                  dataType: "json",
+                  success: function (result) {
+                    if (result['is_user']) {
+                      layer.msg('添加成功！', { icon: 1 });
+                      // 登录成功之后的操作
+                      setTimeout(function () {
+                        location.reload();
+                      }, 1500);
+                    }
+                    else {
+                      layer.msg('添加失败！', { icon: 2 });
+                    }
+                  }
+                }); //ajax结束
+                layer.close(index); //关闭弹出层
+              }); // submit数据发送结束
+            }
+          });
+        }
+      });
     });
   </script>
 </body>

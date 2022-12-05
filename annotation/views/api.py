@@ -67,6 +67,28 @@ def show_en_table(request):
 
     raise Http404("非ajax访问了该api")
 
+def show_management_table(request):
+    if request.is_ajax() and request.method == 'POST':
+        user_objs = User.objects.all()
+        
+        data = []
+        for user_obj in user_objs:
+            dic = {}
+            dic['username'] = user_obj.username
+            dic['first1'] = user_obj.now_index_without_image - 1
+            dic['first2']  = user_obj.total_amount_without_image - dic['first1']
+            dic['second1'] = user_obj.now_index_with_image - 1
+            dic['second2']  = user_obj.total_amount_with_image - dic['second1']
+            data.append(dic)
+        
+        context = {
+            'code': 0,
+            'data': data,
+        }
+        return JsonResponse(context)
+
+    raise Http404("非ajax访问了该api")
+
 def to_annotation_without_image(request):
     # 根据用户名找到用户需要标注第几个caption
     user_obj = User.objects.get(username=request.session.get("info")['username'])

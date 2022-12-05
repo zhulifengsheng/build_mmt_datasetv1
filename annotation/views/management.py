@@ -10,11 +10,7 @@ def management(request):
     user_obj = User.objects.get(username=request.session.get("info")['username'])
     if user_obj.is_admin:
         # 只有管理员用户才能看见该网页
-        user_objs = User.objects.all()
-        res = {
-            'usernames': [i.username for i in user_objs],
-        }
 
-        return render(request, 'management.html', res)
+        return render(request, 'management.html')
     
     raise Http404("非法访问")
