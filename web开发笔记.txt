@@ -1,0 +1,16 @@
+Django
+	1. django-admin startproject web ——创建项目，名为web
+	2. python manage.py startapp annotation ——创建APP，名为annoation
+	3. 静态文件放在annotation的static文件夹下
+	4. HTML模板放在templates文件夹下
+	5. 后端接收前端数据的处理函数放在views文件夹下
+	
+MYSQL
+	1. pip install mysqlclient
+	2. create database mmt_databasev1 DEFAULT CHARSET utf8 COLLATE utf8_general_ci; ——创建数据库  
+	3. 导入数据库
+		mysql -u root -p --default-character-set=utf8
+		use mmt_databasev1;
+		source data.sql;
+	4. 导出数据库
+		mysqldump -uroot -p --default-character-set=utf8 mmt_databasev1 > data.sql
