@@ -14,3 +14,7 @@ MYSQL
 		source data.sql;
 	4. 导出数据库
 		mysqldump -uroot -p --default-character-set=utf8 mmt_databasev1 > data.sql
+
+Git
+	1. git config --global http.proxy http://127.0.0.1:7890
+	2. git config --global --unset http.proxy

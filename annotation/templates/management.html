@@ -93,8 +93,8 @@
 
       //触发单元格工具事件
       table.on('tool(test)', function (obj) { // 双击 toolDouble
-        var data = obj.data;
-        //console.log(obj)
+        var username = obj.data.username;
+
         if (obj.event === 'del') {
           layer.open({
             type: 1,
@@ -107,7 +107,8 @@
               '<li class="layui-form-item">',
               '<label class="layui-form-label">个数</label>',
               '<div class="layui-input-block">',
-              '<input class="layui-input" lay-verify="required" name="number">',
+              '<input class="layui-input" name="username" type="hidden" value=' + username + '>',
+              '<input class="layui-input" lay-verify="required|number" name="number">',
               '</div>',
               '</li>',
               '<li class="layui-form-item" style="text-align:center;">',
@@ -125,7 +126,7 @@
                   type: "POST",
                   dataType: "json",
                   success: function (result) {
-                    if (result['is_user']) {
+                    if (result['success']) {
                       layer.msg('添加成功！', { icon: 1 });
                       // 登录成功之后的操作
                       setTimeout(function () {
@@ -153,7 +154,8 @@
               '<li class="layui-form-item">',
               '<label class="layui-form-label">个数</label>',
               '<div class="layui-input-block">',
-              '<input class="layui-input" lay-verify="required" name="number">',
+              '<input class="layui-input" name="username" type="hidden" value=' + username + '>',
+              '<input class="layui-input" lay-verify="required|number" name="number">',
               '</div>',
               '</li>',
               '<li class="layui-form-item" style="text-align:center;">',
@@ -171,7 +173,7 @@
                   type: "POST",
                   dataType: "json",
                   success: function (result) {
-                    if (result['is_user']) {
+                    if (result['success']) {
                       layer.msg('添加成功！', { icon: 1 });
                       // 登录成功之后的操作
                       setTimeout(function () {

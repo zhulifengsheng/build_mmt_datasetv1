@@ -99,3 +99,39 @@ def to_annotation_without_image(request):
         return HttpResponse("您暂时没有不看图片标注译文的任务")
     else:
         return redirect('/annotation_without_image/{}/'.format(now_index_without_image))
+
+# 后台管理
+def management_del(request):
+    if request.is_ajax() and request.method == 'POST':
+        success_flag = True
+        num = int(request.POST.get('number'))
+        if num <= 0:
+            success_flag = False
+
+        context = {
+            'code': 0,
+            'success': success_flag,
+        }
+
+        return JsonResponse(context)
+    
+    raise Http404("非ajax访问了该api")
+
+def management_add(request):
+    if request.is_ajax() and request.method == 'POST':
+        success_flag = True
+        num = int(request.POST.get('number'))
+        if num <= 0:
+            success_flag = False
+        
+        user_obj = User.objects.get(username=request.POST.get('username'))
+        print(user_obj)
+
+        context = {
+            'code': 0,
+            'success': success_flag,
+        }
+
+        return JsonResponse(context)
+    
+    raise Http404("非ajax访问了该api")
