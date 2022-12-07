@@ -121,11 +121,33 @@ def management_add(request):
     if request.is_ajax() and request.method == 'POST':
         success_flag = True
         num = int(request.POST.get('number'))
-        if num <= 0:
-            success_flag = False
+        username = request.POST.get('username')
+        if num <= 0 or num > 300:
+            context = {
+                'code': 0,
+                'success': False,
+            }
+            return JsonResponse(context)
         
-        user_obj = User.objects.get(username=request.POST.get('username'))
-        print(user_obj)
+        user_obj = User.objects.filter(username=username)
+        if not user_obj.exists():
+            context = {
+                'code': 0,
+                'success': False,
+            }
+            return JsonResponse(context)
+
+        task = request.POST.get('number')
+        if task == 'first':
+            User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image+num)
+        elif task == 'second':
+            User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+num)
+        else:
+            context = {
+                'code': 0,
+                'success': False,
+            }
+            return JsonResponse(context)
 
         context = {
             'code': 0,

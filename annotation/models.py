@@ -32,7 +32,7 @@ class User(models.Model):
     # 不看图片标注（与caption_id对应）
     now_index_without_image = models.PositiveIntegerField(verbose_name='该标注哪个了', default=1)    # 没有被分配过任务时，初始化为0
     total_amount_without_image = models.PositiveIntegerField(verbose_name='标注的总量', default=0)
-
+    
     # 看图片标注（与zh_without_image_id对应）
     now_index_with_image = models.PositiveIntegerField(verbose_name='该标注哪个了', default=1)    # 没有被分配过任务时，初始化为0
     total_amount_with_image = models.PositiveIntegerField(verbose_name='标注的总量', default=0)

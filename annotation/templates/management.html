@@ -75,6 +75,12 @@
         }
       });
 
+      //输入验证
+      form.verify({
+        positiveWholeNumberRequiredTrue1: [/^([1-9]|[1-9][0-9]|[1-2][0-9][0-9]|300)$/, '只能填写小于等于300的正整数'],//必填，且只能输入正整数
+        positiveWholeNumberRequiredTrue2: [/^([1-9][0-9]*)$/, '只能填写正整数'],//必填，且只能输入正整数
+      });
+
       //执行渲染
       table.render({
         elem: '#demo' //指定原始表格元素选择器（推荐id选择器）
@@ -99,19 +105,24 @@
           layer.open({
             type: 1,
             resize: false,  // 不允许拉伸
-            area: '350px',
+            area: '450px',
             shadeClose: true, // 可以点击弹出层之外的区域来关闭弹出层
             title: '删除任务量',
             content: [
               '<ul class="layui-form layui-form-pane" style="margin: 15px;">',
               '<li class="layui-form-item">',
+              '<div class="layui-input-block" style="margin: auto">',
+              '<input type="radio" name="task" value="first" title="第一阶段任务" checked>',
+              '<input type="radio" name="task" value="second" title="第二阶段任务">',
+              '</div>',
+              '<li class="layui-form-item">',
               '<label class="layui-form-label">个数</label>',
               '<div class="layui-input-block">',
               '<input class="layui-input" name="username" type="hidden" value=' + username + '>',
-              '<input class="layui-input" lay-verify="required|number" name="number">',
+              '<input class="layui-input" lay-verify="required|positiveWholeNumberRequiredTrue2" name="number">',
               '</div>',
               '</li>',
-              '<li class="layui-form-item" style="text-align:center;">',
+              '<li class="layui-form-item" style="text-align: center;">',
               '<button type="submit" lay-submit lay-filter="del" class="layui-btn">提交</button>',
               '</li>',
               '</ul>'].join(''),
@@ -146,19 +157,24 @@
           layer.open({
             type: 1,
             resize: false,  // 不允许拉伸
-            area: '350px',
+            area: '450px',
             shadeClose: true, // 可以点击弹出层之外的区域来关闭弹出层
             title: '添加任务量',
             content: [
               '<ul class="layui-form layui-form-pane" style="margin: 15px;">',
               '<li class="layui-form-item">',
+              '<div class="layui-input-block" style="margin: auto">',
+              '<input type="radio" name="task" value="first" title="第一阶段任务" checked>',
+              '<input type="radio" name="task" value="second" title="第二阶段任务">',
+              '</div>',
+              '<li class="layui-form-item">',
               '<label class="layui-form-label">个数</label>',
               '<div class="layui-input-block">',
               '<input class="layui-input" name="username" type="hidden" value=' + username + '>',
-              '<input class="layui-input" lay-verify="required|number" name="number">',
+              '<input class="layui-input" lay-verify="required|positiveWholeNumberRequiredTrue1" name="number">',
               '</div>',
               '</li>',
-              '<li class="layui-form-item" style="text-align:center;">',
+              '<li class="layui-form-item" style="text-align: center;">',
               '<button type="submit" lay-submit lay-filter="add" class="layui-btn">提交</button>',
               '</li>',
               '</ul>'].join(''),
