@@ -138,14 +138,14 @@
                   dataType: "json",
                   success: function (result) {
                     if (result['success']) {
-                      layer.msg('添加成功！', { icon: 1 });
+                      layer.msg('删除成功！', { icon: 1 });
                       // 登录成功之后的操作
                       setTimeout(function () {
                         location.reload();
                       }, 1500);
                     }
                     else {
-                      layer.msg('添加失败！', { icon: 2 });
+                      layer.msg('删除失败！', { icon: 2 });
                     }
                   }
                 }); //ajax结束

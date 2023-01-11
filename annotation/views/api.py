@@ -103,32 +103,19 @@ def to_annotation_without_image(request):
 # 后台管理
 def management_del(request):
     if request.is_ajax() and request.method == 'POST':
-        success_flag = True
-        num = int(request.POST.get('number'))
-        if num <= 0:
-            success_flag = False
-
-        context = {
-            'code': 0,
-            'success': success_flag,
-        }
-
-        return JsonResponse(context)
-    
-    raise Http404("非ajax访问了该api")
-
-def management_add(request):
-    if request.is_ajax() and request.method == 'POST':
-        success_flag = True
         num = int(request.POST.get('number'))
         username = request.POST.get('username')
-        if num <= 0 or num > 300:
+        task = request.POST.get('task')
+
+        # 1 错误的数字范围报错
+        if num <= 0:
             context = {
                 'code': 0,
                 'success': False,
             }
             return JsonResponse(context)
         
+        # 2 用户不存在报错
         user_obj = User.objects.filter(username=username)
         if not user_obj.exists():
             context = {
@@ -136,12 +123,29 @@ def management_add(request):
                 'success': False,
             }
             return JsonResponse(context)
+        user_obj = user_obj.first()
 
-        task = request.POST.get('number')
         if task == 'first':
-            User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image+num)
+            # 删除的任务量数大于用户的未标注的任务量数
+            if user_obj.total_amount_without_image - user_obj.now_index_without_image + 1 < num:
+                context = {
+                    'code': 0,
+                    'success': False,
+                }
+                return JsonResponse(context)
+            # 成功执行
+            User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image-num)
         elif task == 'second':
-            User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+num)
+            # 删除的任务量数大于用户的未标注的任务量数
+            if user_obj.total_amount_with_image - user_obj.now_index_with_image + 1 < num:
+                context = {
+                    'code': 0,
+                    'success': False,
+                }
+                return JsonResponse(context)
+            # 成功执行
+            User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image-num)
+        # 错误的任务标志
         else:
             context = {
                 'code': 0,
@@ -151,9 +155,52 @@ def management_add(request):
 
         context = {
             'code': 0,
-            'success': success_flag,
+            'success': True,
         }
+        return JsonResponse(context)
+    
+    raise Http404("非ajax访问了该api")
 
+def management_add(request):
+    if request.is_ajax() and request.method == 'POST':
+        num = int(request.POST.get('number'))
+        username = request.POST.get('username')
+        task = request.POST.get('task')
+
+        # 1 错误的数字范围报错
+        if num <= 0 or num > 300:
+            context = {
+                'code': 0,
+                'success': False,
+            }
+            return JsonResponse(context)
+        
+        # 2 用户不存在报错
+        user_obj = User.objects.filter(username=username)
+        if not user_obj.exists():
+            context = {
+                'code': 0,
+                'success': False,
+            }
+            return JsonResponse(context)
+        user_obj = user_obj.first()
+        
+        if task == 'first':
+            User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image+num)
+        elif task == 'second':
+            User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+num)
+        # 3 错误的任务标志
+        else:
+            context = {
+                'code': 0,
+                'success': False,
+            }
+            return JsonResponse(context)
+
+        context = {
+            'code': 0,
+            'success': True,
+        }
         return JsonResponse(context)
     
     raise Http404("非ajax访问了该api")
