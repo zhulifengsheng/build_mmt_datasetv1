@@ -1,8 +1,8 @@
 from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import redirect
 from annotation.models import User, Caption
+from annotation.utils.backend import util_management_add
 
-# finish
 def login(request):
     if request.is_ajax() and request.method == 'POST':
         username = request.POST.get('username')
@@ -100,64 +100,45 @@ def to_annotation_without_image(request):
     else:
         return redirect('/annotation_without_image/{}/'.format(now_index_without_image))
 
-# 后台管理
+# 后台管理 TODO
 def management_del(request):
     if request.is_ajax() and request.method == 'POST':
         num = int(request.POST.get('number'))
         username = request.POST.get('username')
         task = request.POST.get('task')
 
+        error_context = {
+            'code': 0,
+            'success': False,
+        }
+
         # 1 错误的数字范围报错
         if num <= 0:
-            context = {
-                'code': 0,
-                'success': False,
-            }
-            return JsonResponse(context)
+            return JsonResponse(error_context)
         
-        # 2 用户不存在报错
         user_obj = User.objects.filter(username=username)
+        # 2 用户不存在报错
         if not user_obj.exists():
-            context = {
-                'code': 0,
-                'success': False,
-            }
-            return JsonResponse(context)
+            return JsonResponse(error_context)
         user_obj = user_obj.first()
 
         if task == 'first':
             # 删除的任务量数大于用户的未标注的任务量数
             if user_obj.total_amount_without_image - user_obj.now_index_without_image + 1 < num:
-                context = {
-                    'code': 0,
-                    'success': False,
-                }
-                return JsonResponse(context)
+                return JsonResponse(error_context)
             # 成功执行
             User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image-num)
         elif task == 'second':
             # 删除的任务量数大于用户的未标注的任务量数
             if user_obj.total_amount_with_image - user_obj.now_index_with_image + 1 < num:
-                context = {
-                    'code': 0,
-                    'success': False,
-                }
-                return JsonResponse(context)
+                return JsonResponse(error_context)
             # 成功执行
             User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image-num)
-        # 错误的任务标志
         else:
-            context = {
-                'code': 0,
-                'success': False,
-            }
-            return JsonResponse(context)
+            # 错误的任务标志
+            return JsonResponse(error_context)
 
-        context = {
-            'code': 0,
-            'success': True,
-        }
-        return JsonResponse(context)
+        return JsonResponse({'code': 0, 'success': True})
     
     raise Http404("非ajax访问了该api")
 
@@ -167,40 +148,27 @@ def management_add(request):
         username = request.POST.get('username')
         task = request.POST.get('task')
 
+        error_context = {
+            'code': 0,
+            'success': False,
+        }
+
         # 1 错误的数字范围报错
         if num <= 0 or num > 300:
-            context = {
-                'code': 0,
-                'success': False,
-            }
-            return JsonResponse(context)
+            return JsonResponse(error_context)
         
-        # 2 用户不存在报错
         user_obj = User.objects.filter(username=username)
+        # 2 用户不存在报错
         if not user_obj.exists():
-            context = {
-                'code': 0,
-                'success': False,
-            }
-            return JsonResponse(context)
+            return JsonResponse(error_context)
         user_obj = user_obj.first()
         
-        if task == 'first':
-            User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image+num)
-        elif task == 'second':
-            User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+num)
-        # 3 错误的任务标志
+        if task == 'first' or task == 'second':
+            util_management_add(username, task)
         else:
-            context = {
-                'code': 0,
-                'success': False,
-            }
-            return JsonResponse(context)
+            # 3 错误的任务标志
+            return JsonResponse(error_context)
 
-        context = {
-            'code': 0,
-            'success': True,
-        }
-        return JsonResponse(context)
+        return JsonResponse({'code': 0, 'success': True})
     
     raise Http404("非ajax访问了该api")
