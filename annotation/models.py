@@ -45,8 +45,12 @@ class FirstStageWorkPool(models.Model):
     '''
     # 默认主键id
     caption_obj = models.ForeignKey(to="Caption", to_field="caption_id", on_delete=models.CASCADE)
-    user_obj = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)  # 那个用户对该英文描述进行不看图片译文标注
-    is_finished = models.BooleanField(verbose_name='这个标注是否完成了', default=False)
+    user_obj = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)  # 由那个用户对该英文描述进行不看图片译文标注
+    index_without_image = models.PositiveIntegerField(verbose_name='当前用户的第几个标注数据')
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user_obj', 'index_without_image'], name="indexwithoutimage_of_the_user"),
+        ]
 
 class Caption(models.Model):
     caption_id = models.BigAutoField(verbose_name='Caption ID', primary_key=True)
@@ -70,3 +74,7 @@ class ZhWithoutImage(models.Model):
     caption_obj = models.ForeignKey(to="Caption", to_field="caption_id", on_delete=models.CASCADE)
     # 谁标注的这个不看图片中文
     user_that_annots_it = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['caption_obj', 'user_that_annots_it'], name="this_caption_annoted_by_the_user_only"),
+        ]

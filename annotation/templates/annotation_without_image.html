@@ -43,7 +43,7 @@
   <div class="progress" style="margin-top: 15px; width:50%; margin: auto;">
     <div id="p" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40"
       aria-valuemin="0" aria-valuemax="100" style="width: 0%; min-width: 60px;">
-      {{ caption_id }} / {{ total }}
+      {{ annotated_amount }} / {{ total }}
     </div>
   </div>
 
@@ -59,7 +59,7 @@
       <div class="layui-form-item layui-form-text" style="display: inline-block; width: 46%; vertical-align: bottom;">
         <label class="layui-form-label" style="margin-bottom: 0px;">机器翻译</label>
         <div class="layui-input-block">
-          <textarea placeholder="{{ zh_machine_translation }}" class="layui-textarea" disabled
+          <textarea id="mt" placeholder="{{ zh_machine_translation }}" class="layui-textarea" disabled
             style="font-size: 18px;"></textarea>
         </div>
       </div>
@@ -81,12 +81,15 @@
       </div>
     </div>
 
+    <!-- 隐藏的输入，标注是用户的第几个任务 -->
+    <input class="layui-input" name="index" type="hidden" value="{{ annotated_amount }}">
+    
     <div class="layui-form-item layui-form-text" style="margin-left: 4%; margin-right: 4%;">
       <label class="layui-form-label"
         style="width: 120px; margin-bottom: 0px; background-color: #009688; color: white;">译文1</label>
       <div class="layui-input-block">
-        <textarea name="zh1" lay-verify="required" placeholder="请输入不看图片翻译的译文" class="layui-textarea"
-          style="font-size: 18px;"></textarea>
+        <textarea id="zh1" name="zh1" lay-verify="required" placeholder="请输入不看图片翻译的译文" class="layui-textarea"
+          style="font-size: 18px;">{{ zh_machine_translation }}</textarea>
       </div>
     </div>
 
@@ -98,13 +101,6 @@
           style="font-size: 18px;"></textarea>
       </div>
     </div>
-
-    <!-- <div class="layui-form-item">
-      <div class="layui-input-block">
-        <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">提交</button>
-        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
-      </div>
-    </div> -->
   </form>
 
   <div id="all_layerpage" style="text-align: center;"></div>
@@ -151,30 +147,27 @@
       //提交事件
       form.on('submit(demo1)', function (data) {
         $.ajax({
-          // TODO 一个新的后端接收数据的函数
-          url: "/api/get_annotation_without_image",
+          url: "/api/get_annotation_without_image/",
           data: data.field,  // 数据字典
           async: true,
           cache: false,
           type: "POST",
           dataType: "json",
           success: function (result) {
-            // TODO 页面跳转的逻辑
-            $(window).attr('location', "/annotation_without_image/13");
-            // $(window).attr('location', "/annotation_without_image/" + result['next_caption_id']);
+            $(window).attr('location', "/annotation_without_image/" + result['annotated_amount']);
           }
         }); //ajax结束
       });
 
       laypage.render({
         elem: 'all_layerpage',  // id
-        count: "{{ annotated_amount }}", // 总数，前端设置固定值以减少服务器开销
+        count: "{{ total }}",
         limit: 1, // 每页显示一个
-        curr: "{{ caption_id }}",
+        curr: "{{ annotated_amount }}",
         layout: ['prev', 'page', 'next'],
         jump: function (obj, first) {
           // 修改进度条的宽度
-          $("#p").width(600 * "{{ caption_id }}" / "{{ total }}");
+          $("#p").width(600 * "{{ annotated_amount }}" / "{{ total }}");
 
           if (!first) { // 不是第一次访问，则进行页面跳转
             $(window).attr('location', "/annotation_without_image/" + obj.curr);

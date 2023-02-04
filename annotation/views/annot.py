@@ -1,22 +1,30 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import Http404
 
-from annotation.models import Image, Caption, FirstStageWorkPool, User
+from annotation.models import FirstStageWorkPool, User
 
 def annotation_without_image(request, index_without_image):
+    # 只可以访问当前要标注的数据 和 之前标注过的数据
     if request.session.get("info") is None or 'username' not in request.session.get("info"):
         raise Http404("非法访问")
     
     # 找到用户要标注的那个caption_id
     user_obj = User.objects.get(username=request.session.get("info")['username'])
-    x = FirstStageWorkPool.objects.filter(user_obj=user_obj.username).order_by("id")
+    # 不可以超前访问待标注的数据
+    if user_obj.now_index_without_image < index_without_image:
+        return redirect('/annotation_without_image/{}/'.format(user_obj.now_index_without_image))
 
-    Caption_obj = x[index_without_image-1].caption_obj
+    Caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj.username, index_without_image=index_without_image).caption_obj
+
     res = {
-        'annotated_amount': user_obj.now_index_without_image-1, # 已标注的个数
+        'annotated_amount': index_without_image, # 已标注的个数
+        # TODO 显示曾经标注过的数据
+        # 'zh1'
+        # 'zh2'
         'total': user_obj.total_amount_without_image,   # 总共需要标注的个数
         'caption_id': Caption_obj.caption_id,
         'caption': Caption_obj.caption,
         'zh_machine_translation': Caption_obj.zh_machine_translation,
+        'is_admin': user_obj.is_admin,
     }
     return render(request, 'annotation_without_image.html', res)

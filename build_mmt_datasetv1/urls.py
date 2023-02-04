@@ -18,12 +18,11 @@ from django.urls import path
 from annotation.views import show, api, first_page, management, annot
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
+    # 网址
     path('', first_page.first_page),
     path('show/<int:image_id>/', show.show),
     path('annotation_without_image/<int:index_without_image>/', annot.annotation_without_image),
     # path('annotation_with_image/<int:caption_id>/', annot.annotation_with_image),
-
     path('management/', management.management),
 
     # API
@@ -33,7 +32,9 @@ urlpatterns = [
     path('api/show_management_table/', api.show_management_table),
     path('api/management_add/', api.management_add),
     path('api/management_del/', api.management_del),
+
     # 获取当前用户的标注任务信息，并在后端进行重定向的跳转
     path('api/to_annotation_without_image/', api.to_annotation_without_image),
+    path('api/get_annotation_without_image/', api.get_annotation_without_image),
     # path('api/to_annotation_with_image/', api.to_annotation_with_image),
 ]

@@ -100,6 +100,34 @@ def to_annotation_without_image(request):
     else:
         return redirect('/annotation_without_image/{}/'.format(now_index_without_image))
 
+def get_annotation_without_image(request):
+    if request.is_ajax() and request.method == 'POST':
+        user_obj = User.objects.get(username=request.session.get("info")['username'])
+        username = user_obj.username
+        
+        # 保存前端标注的不看图片标注数据
+        index = int(request.POST.get('index'))
+        zh1 = request.POST.get('zh1')
+        zh2 = request.POST.get('zh2')
+
+        if user_obj.now_index_without_image == index:
+            # 标注的是新的数据
+            User.objects.filter(username=username).update(now_index_without_image=index+1)
+            #create_zh_without_image(zh1)
+            #create_zh_without_image(zh2)
+            if user_obj.now_index_without_image == user_obj.total_amount_without_image:
+                return HttpResponse("您暂时没有不看图片标注译文的任务")
+            
+        else:
+            # 标注的是已标注过的数据
+            #create_zh_without_image(zh1)
+            #create_zh_without_image(zh2)
+            index = user_obj.now_index_without_image
+
+        return JsonResponse({'annotated_amount': str(index+1)})
+
+    raise Http404("非ajax访问了该api")
+
 # 后台管理 TODO
 def management_del(request):
     if request.is_ajax() and request.method == 'POST':
@@ -164,7 +192,8 @@ def management_add(request):
         user_obj = user_obj.first()
         
         if task == 'first' or task == 'second':
-            util_management_add(username, task)
+            # 剩余任务量100，但是分配了300任务量的话，会默认分配完剩下的100任务量并向前端返回分配成功
+            util_management_add(username, task, user_obj, num)
         else:
             # 3 错误的任务标志
             return JsonResponse(error_context)
