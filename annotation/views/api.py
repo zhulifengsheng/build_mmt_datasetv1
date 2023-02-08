@@ -1,7 +1,7 @@
 from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import redirect
-from annotation.models import User, Caption
-from annotation.utils.backend import util_management_add
+from annotation.models import User, Caption, FirstStageWorkPool
+from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image
 
 def login(request):
     if request.is_ajax() and request.method == 'POST':
@@ -106,22 +106,25 @@ def get_annotation_without_image(request):
         username = user_obj.username
         
         # 保存前端标注的不看图片标注数据
-        index = int(request.POST.get('index'))
+        index = int(request.POST.get('index'))  # index表示用户的第几个标注任务
         zh1 = request.POST.get('zh1')
         zh2 = request.POST.get('zh2')
+
+        # 通过标注任务，找到用户的标注caption
+        caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
 
         if user_obj.now_index_without_image == index:
             # 标注的是新的数据
             User.objects.filter(username=username).update(now_index_without_image=index+1)
-            #create_zh_without_image(zh1)
-            #create_zh_without_image(zh2)
+            create_zh_without_image(zh1, caption_obj, user_obj)
+            create_zh_without_image(zh2, caption_obj, user_obj)
             if user_obj.now_index_without_image == user_obj.total_amount_without_image:
                 return HttpResponse("您暂时没有不看图片标注译文的任务")
             
         else:
             # 标注的是已标注过的数据
-            #create_zh_without_image(zh1)
-            #create_zh_without_image(zh2)
+            update_zh_without_image(zh1, caption_obj, user_obj)
+            update_zh_without_image(zh2, caption_obj, user_obj)
             index = user_obj.now_index_without_image
 
         return JsonResponse({'annotated_amount': str(index+1)})

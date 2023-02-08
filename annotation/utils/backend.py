@@ -1,12 +1,12 @@
 import os
-from annotation.models import User, RandomImageID, _MAX, Caption, Image, FirstStageWorkPool
+from annotation.models import User, RandomImageID, _MAX, Caption, Image, FirstStageWorkPool, ZhWithoutImage
 
 def image_url(image_name):
     path_list = ['img', 'coco']
     path_list.extend(image_name.split('_'))
     return os.path.join(*path_list)
 
-# 给用户添加任务
+# 给用户添加任务量
 def util_management_add(username, task, user_obj, num):
     if task == 'first':
         # 给用户添加第一阶段的任务
@@ -25,5 +25,13 @@ def util_management_add(username, task, user_obj, num):
         
         User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image+t)
     else:
-        # 给用户添加第二阶段的任务
+        # TODO 给用户添加第二阶段的任务
         User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+num)    
+
+# 创建第一阶段数据
+def create_zh_without_image(zh, caption_obj, user_obj):
+    pass
+
+# 更新已标注过的第一阶段数据
+def update_zh_without_image(zh, caption_obj, user_obj):
+    pass
