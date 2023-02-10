@@ -24,7 +24,7 @@ def first_page(request):
     # for i in x:
     #     RandomImageID.objects.create(image_id=i)
 
-    # # 载入英文描述及其机翻的信息
+    # 载入英文描述及其机翻的信息
     # f1 = open(os.path.join(dir, 'captions.txt'), 'r', encoding='utf-8')
     # f2 = open(os.path.join(dir, 'captions_translation.txt'), 'r', encoding='utf-8')
     # idx, no = 1, 1

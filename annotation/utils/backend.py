@@ -30,8 +30,14 @@ def util_management_add(username, task, user_obj, num):
 
 # 创建第一阶段数据
 def create_zh_without_image(zh, caption_obj, user_obj):
-    pass
+    ZhWithoutImage.objects.create(zh_without_image=zh, caption_obj=caption_obj, user_that_annots_it=user_obj)
 
 # 更新已标注过的第一阶段数据
 def update_zh_without_image(zh, caption_obj, user_obj):
-    pass
+    # 先通过 caption_obj 和 user_obj 找到数据，然后进行修改
+    if zh == '':
+        # 判断歧义删除
+        ZhWithoutImage.objects.get().delete()
+        print('shanchu')
+    else:
+        print(1)

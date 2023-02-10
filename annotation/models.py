@@ -74,7 +74,3 @@ class ZhWithoutImage(models.Model):
     caption_obj = models.ForeignKey(to="Caption", to_field="caption_id", on_delete=models.CASCADE)
     # 谁标注的这个不看图片中文
     user_that_annots_it = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['caption_obj', 'user_that_annots_it'], name="this_caption_annoted_by_the_user_only"),
-        ]

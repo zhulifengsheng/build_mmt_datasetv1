@@ -24,6 +24,7 @@ urlpatterns = [
     path('annotation_without_image/<int:index_without_image>/', annot.annotation_without_image),
     # path('annotation_with_image/<int:caption_id>/', annot.annotation_with_image),
     path('management/', management.management),
+    # path('check_annotation/', ),
 
     # API
     path('api/login/', api.login),

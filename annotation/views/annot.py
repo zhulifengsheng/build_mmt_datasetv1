@@ -16,18 +16,27 @@ def annotation_without_image(request, index_without_image):
 
     caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj.username, index_without_image=index_without_image).caption_obj
 
+    qiyi = False
+
     # 找到之前标注过的中文
-    zhwithoutimage = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj)
+    zh1, zh2 = caption_obj.zh_machine_translation, ''
+    zhwithoutimage = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
+    if zhwithoutimage.exists():
+        zhs = [i.zh_without_image for i in zhwithoutimage] + ['']
+        zh1 = zhs[0]
+        zh2 = zhs[1]
+        if zh2 != '':
+            qiyi = True
 
     res = {
         'annotated_amount': index_without_image, # 已标注的个数
-        # TODO 显示曾经标注过的数据
-        # 'zh1'
-        # 'zh2'
+        'zh1': zh1,
+        'zh2': zh2,
         'total': user_obj.total_amount_without_image,   # 总共需要标注的个数
         'caption_id': caption_obj.caption_id,
         'caption': caption_obj.caption,
         'zh_machine_translation': caption_obj.zh_machine_translation,
         'is_admin': user_obj.is_admin,
+        'qiyi': qiyi,   # 是否是歧义句
     }
     return render(request, 'annotation_without_image.html', res)

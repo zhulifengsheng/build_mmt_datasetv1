@@ -69,7 +69,11 @@
       <div class="layui-form-item" pane style="width: 250px; display: inline-block; vertical-align: bottom;">
         <label class="layui-form-label" style="width: 120px; background-color: #009688; color: white;">英文是否歧义</label>
         <div class="layui-input-block" style="padding-left: 10px;">
-          <input type="checkbox" name="close" lay-skin="switch" lay-filter="switchTest" lay-text="是|否">
+          {% if qiyi %}
+          <input type="checkbox" lay-skin="switch" lay-filter="switchTest" lay-text="是|否" checked>
+          {% else %}
+          <input type="checkbox" lay-skin="switch" lay-filter="switchTest" lay-text="是|否">
+          {% endif %}
         </div>
       </div>
 
@@ -83,13 +87,13 @@
 
     <!-- 隐藏的输入，标注是用户的第几个任务 -->
     <input class="layui-input" name="index" type="hidden" value="{{ annotated_amount }}">
-    
+
     <div class="layui-form-item layui-form-text" style="margin-left: 4%; margin-right: 4%;">
       <label class="layui-form-label"
         style="width: 120px; margin-bottom: 0px; background-color: #009688; color: white;">译文1</label>
       <div class="layui-input-block">
         <textarea id="zh1" name="zh1" lay-verify="required" placeholder="请输入不看图片翻译的译文" class="layui-textarea"
-          style="font-size: 18px;">{{ zh_machine_translation }}</textarea>
+          style="font-size: 18px;">{{ zh1 }}</textarea>
       </div>
     </div>
 
@@ -97,8 +101,13 @@
       <label class="layui-form-label"
         style="width: 120px; margin-bottom: 0px; background-color: #009688; color: white;">译文2</label>
       <div class="layui-input-block">
+        {% if qiyi %}
+        <textarea id="zh2" name="zh2" placeholder="英文是歧义时，填写" class="layui-textarea"
+          style="font-size: 18px;">{{ zh2 }}</textarea>
+        {% else %}
         <textarea id="zh2" name="zh2" placeholder="英文是歧义时，填写" class="layui-textarea" disabled
-          style="font-size: 18px;"></textarea>
+          style="font-size: 18px;">{{ zh2 }}</textarea>
+        {% endif %}
       </div>
     </div>
   </form>
@@ -140,6 +149,7 @@
           // 将zh2也设置为必不填
           $("#zh2").attr("disabled", true);
           $("#zh2").removeAttr("lay-verify");
+          $('#zh2').val('');
           layer.tips('无需填写译文2', data.othis);
         }
       });

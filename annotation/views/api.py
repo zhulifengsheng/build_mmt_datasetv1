@@ -32,7 +32,7 @@ def show_zh_table(request):
             dic = {}
             dic['zh_machine_translation'] = caption_obj.zh_machine_translation  # 机器翻译
             
-            # TODO
+            # TODO 显示已标注过的数据
             dic['zh_without_image'] = '未标注'
             dic['zh_with_image'] = 'TODO'
 
@@ -96,7 +96,7 @@ def to_annotation_without_image(request):
     total_amount_without_image = user_obj.total_amount_without_image
 
     if now_index_without_image > total_amount_without_image:
-        return HttpResponse("您暂时没有不看图片标注译文的任务")
+        return redirect('/annotation_without_image/{}/'.format(now_index_without_image-1))
     else:
         return redirect('/annotation_without_image/{}/'.format(now_index_without_image))
 
@@ -117,9 +117,11 @@ def get_annotation_without_image(request):
             # 标注的是新的数据
             User.objects.filter(username=username).update(now_index_without_image=index+1)
             create_zh_without_image(zh1, caption_obj, user_obj)
-            create_zh_without_image(zh2, caption_obj, user_obj)
-            if user_obj.now_index_without_image == user_obj.total_amount_without_image:
-                return HttpResponse("您暂时没有不看图片标注译文的任务")
+            if zh2 != '':
+                create_zh_without_image(zh2, caption_obj, user_obj)
+            # 用户已标注完全部数据
+            if user_obj.now_index_without_image > user_obj.total_amount_without_image:
+                return JsonResponse({'annotated_amount': str(index+1)})
             
         else:
             # 标注的是已标注过的数据
@@ -131,7 +133,7 @@ def get_annotation_without_image(request):
 
     raise Http404("非ajax访问了该api")
 
-# 后台管理 TODO
+# 后台管理
 def management_del(request):
     if request.is_ajax() and request.method == 'POST':
         num = int(request.POST.get('number'))
