@@ -164,9 +164,19 @@
           type: "POST",
           dataType: "json",
           success: function (result) {
-            $(window).attr('location', "/annotation_without_image/" + result['annotated_amount']);
+            if (result['finished']) {
+              layer.msg('任务已经都完成了！', { icon: 1 });
+              // 之后跳转到管理页面
+              setTimeout(function () {
+                $(window).attr('location', "/management/");
+              }, 1500);
+            }
+            else {
+              $(window).attr('location', "/annotation_without_image/" + result['annotated_amount']);
+            }
           }
         }); //ajax结束
+        return false;
       });
 
       laypage.render({

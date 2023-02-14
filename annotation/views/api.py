@@ -92,13 +92,13 @@ def show_management_table(request):
 def to_annotation_without_image(request):
     # 根据用户名找到用户需要标注第几个caption
     user_obj = User.objects.get(username=request.session.get("info")['username'])
-    now_index_without_image = user_obj.now_index_without_image
-    total_amount_without_image = user_obj.total_amount_without_image
-
-    if now_index_without_image > total_amount_without_image:
-        return redirect('/annotation_without_image/{}/'.format(now_index_without_image-1))
+    
+    if user_obj.now_index_without_image > user_obj.total_amount_without_image:
+        # 任务都完成了
+        return redirect('/annotation_without_image/{}/'.format(user_obj.total_amount_without_image))
     else:
-        return redirect('/annotation_without_image/{}/'.format(now_index_without_image))
+        # 任务还在做
+        return redirect('/annotation_without_image/{}/'.format(user_obj.now_index_without_image))
 
 def get_annotation_without_image(request):
     if request.is_ajax() and request.method == 'POST':
@@ -112,24 +112,24 @@ def get_annotation_without_image(request):
 
         # 通过标注任务，找到用户的标注caption
         caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
-
+        
         if user_obj.now_index_without_image == index:
             # 标注的是新的数据
             User.objects.filter(username=username).update(now_index_without_image=index+1)
             create_zh_without_image(zh1, caption_obj, user_obj)
             if zh2 != '':
                 create_zh_without_image(zh2, caption_obj, user_obj)
-            # 用户已标注完全部数据
-            if user_obj.now_index_without_image > user_obj.total_amount_without_image:
-                return JsonResponse({'annotated_amount': str(index+1)})
             
+            if index+1 > user_obj.total_amount_without_image:
+                # 用户已标注完全部数据
+                return JsonResponse({'annotated_amount': str(index), 'finished': True})
+            else:
+                return JsonResponse({'annotated_amount': str(index+1), 'finished': False})
         else:
             # 标注的是已标注过的数据
             update_zh_without_image(zh1, caption_obj, user_obj)
             update_zh_without_image(zh2, caption_obj, user_obj)
-            index = user_obj.now_index_without_image
-
-        return JsonResponse({'annotated_amount': str(index+1)})
+            return JsonResponse({'annotated_amount': str(user_obj.now_index_without_image+1), 'finished': False})
 
     raise Http404("非ajax访问了该api")
 
