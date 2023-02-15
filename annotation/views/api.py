@@ -1,7 +1,7 @@
 from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import redirect
 from annotation.models import User, Caption, FirstStageWorkPool
-from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image
+from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image, del_zh_without_image
 
 def login(request):
     if request.is_ajax() and request.method == 'POST':
@@ -109,6 +109,7 @@ def get_annotation_without_image(request):
         index = int(request.POST.get('index'))  # index表示用户的第几个标注任务
         zh1 = request.POST.get('zh1')
         zh2 = request.POST.get('zh2')
+        assert zh1 != '', '标注的第一个译文不能为空'
 
         # 通过标注任务，找到用户的标注caption
         caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
@@ -127,9 +128,15 @@ def get_annotation_without_image(request):
                 return JsonResponse({'annotated_amount': str(index+1), 'finished': False})
         else:
             # 标注的是已标注过的数据
-            update_zh_without_image(zh1, caption_obj, user_obj)
-            update_zh_without_image(zh2, caption_obj, user_obj)
-            return JsonResponse({'annotated_amount': str(user_obj.now_index_without_image+1), 'finished': False})
+            update_zh_without_image(zh1, caption_obj, user_obj, 0)
+            if zh2 == '':
+                del_zh_without_image(caption_obj, user_obj)
+            else:
+                update_zh_without_image(zh2, caption_obj, user_obj, 1)
+
+            # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
+            index = min(user_obj.now_index_without_image, user_obj.total_amount_without_image)
+            return JsonResponse({'annotated_amount': str(index), 'finished': False})
 
     raise Http404("非ajax访问了该api")
 

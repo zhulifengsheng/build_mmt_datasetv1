@@ -13,12 +13,10 @@ def annotation_without_image(request, index_without_image):
     # 找到用户要标注的那个caption_id
     user_obj = User.objects.get(username=request.session.get("info")['username'])
     
-    # 不可以访问超过标注总量的页面
-    if user_obj.total_amount_without_image < index_without_image:
-        return redirect('/annotation_without_image/{}/'.format(user_obj.now_index_without_image))
-    # 不可以超前访问待标注的数据
-    if user_obj.now_index_without_image < index_without_image:
-        return redirect('/annotation_without_image/{}/'.format(user_obj.now_index_without_image))
+    # 不可以访问超过标注总量的页面，不可以超前访问待标注的数据
+    if user_obj.total_amount_without_image < index_without_image or user_obj.now_index_without_image < index_without_image:
+        index = min(user_obj.now_index_without_image, user_obj.total_amount_without_image)
+        return redirect('/annotation_without_image/{}/'.format(index))
     
     # 传递到前端的参数
     caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj.username, index_without_image=index_without_image).caption_obj

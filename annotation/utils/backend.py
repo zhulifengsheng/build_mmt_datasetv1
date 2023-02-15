@@ -33,11 +33,24 @@ def create_zh_without_image(zh, caption_obj, user_obj):
     ZhWithoutImage.objects.create(zh_without_image=zh, caption_obj=caption_obj, user_that_annots_it=user_obj)
 
 # 更新已标注过的第一阶段数据
-def update_zh_without_image(zh, caption_obj, user_obj):
+def update_zh_without_image(zh, caption_obj, user_obj, index):
+    '''
+        index: 0 or 1 表示对第几个译文进行修改
+    '''
     # 先通过 caption_obj 和 user_obj 找到数据，然后进行修改
-    if zh == '':
-        # 判断歧义删除
-        ZhWithoutImage.objects.get().delete()
-        print('shanchu')
+    zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
+    
+    if len(zhs) == 1 and index == 1:
+        # 之前没有标注第二个翻译，现在才标注第二个翻译
+        create_zh_without_image(zh, caption_obj, user_obj)
     else:
+        id = zhs[index].zh_without_image_id
+        ZhWithoutImage.objects.filter(zh_without_image_id=id).update(zh_without_image=zh)
+
+def del_zh_without_image(caption_obj, user_obj):
+    # 若存在则删除
+    zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
+    if len(zhs) != 1:
         print(1)
+        id = zhs[1].zh_without_image_id
+        ZhWithoutImage.objects.filter(zh_without_image_id=id).delete()
