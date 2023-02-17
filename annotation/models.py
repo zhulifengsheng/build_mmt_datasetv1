@@ -52,6 +52,19 @@ class FirstStageWorkPool(models.Model):
             models.UniqueConstraint(fields=['user_obj', 'index_without_image'], name="indexwithoutimage_of_the_user"),
         ]
 
+class SecondStageWorkPool(models.Model):
+    '''
+    第一阶段工作池，根据_MAX最大标注的图片数量，这个第一阶段任务的标注数量也会是固定的
+    '''
+    # 默认主键id
+    zh_without_image_obj = models.ForeignKey(to="ZhWithoutImage", to_field="zh_without_image_id", on_delete=models.CASCADE)
+    user_obj = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)  # 由那个用户对该不看图片译文进行修正
+    index_with_image = models.PositiveIntegerField(verbose_name='当前用户的第几个标注数据')
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user_obj', 'index_with_image'], name="indexwithimage_of_the_user"),
+        ]
+
 class Caption(models.Model):
     caption_id = models.BigAutoField(verbose_name='Caption ID', primary_key=True)
     caption_NO = models.PositiveSmallIntegerField(verbose_name='第几个描述')    # 1-7
@@ -67,10 +80,23 @@ class Caption(models.Model):
         ]
 
 class ZhWithoutImage(models.Model):
-    zh_without_image_id = models.BigAutoField(verbose_name='ZhWithoutImage ID', primary_key=True)
+    zh_without_image_id = models.BigAutoField(verbose_name='ZhWithoutImage ID', primary_key=True)   # 主键
     zh_without_image = models.TextField(verbose_name='不看图片标注的中文')
 
     # 该不看图片中文链接到那个Caption
     caption_obj = models.ForeignKey(to="Caption", to_field="caption_id", on_delete=models.CASCADE)
     # 谁标注的这个不看图片中文
     user_that_annots_it = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)
+
+class ZhWithImage(models.Model):
+    zh_with_image_id = models.BigAutoField(verbose_name='ZhWithImage ID', primary_key=True) # 主键
+    zh_with_image = models.TextField(verbose_name='看图片标注的中文')
+
+    # 该不看图片中文链接到那个Caption
+    zh_without_image_obj = models.ForeignKey(to="ZhWithoutImage", to_field="zh_without_image_id", on_delete=models.CASCADE)
+    # 谁标注的这个看图片中文
+    user_that_annots_it = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['zh_without_image_obj', 'user_that_annots_it'], name="user_annot_it_only_one"),
+        ]

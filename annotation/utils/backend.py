@@ -1,10 +1,30 @@
 import os
-from annotation.models import User, RandomImageID, _MAX, Caption, Image, FirstStageWorkPool, ZhWithoutImage
+from annotation.models import User, RandomImageID, _MAX, Caption, Image, FirstStageWorkPool, ZhWithoutImage, SecondStageWorkPool
 
 def image_url(image_name):
     path_list = ['img', 'coco']
     path_list.extend(image_name.split('_'))
     return os.path.join(*path_list)
+
+def util_management_del(username, task, user_obj, num):
+    if task == 'first':
+        if user_obj.total_amount_without_image - user_obj.now_index_without_image + 1 < num:
+            return False
+        else:
+            User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image-num)
+            # 删除工作池中已分配的任务
+            for i in range(num):
+                FirstStageWorkPool.objects.filter(user_obj=user_obj, index_without_image=user_obj.total_amount_without_image-i).delete()
+    else:
+        if user_obj.total_amount_with_image - user_obj.now_index_with_image + 1 < num:
+            return False
+        else:
+            User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image-num)
+            # 删除工作池中已分配的任务
+            for i in range(num):
+                SecondStageWorkPool.objects.filter(user_obj=user_obj, index_with_image=user_obj.total_amount_with_image-i).delete()
+
+    return True
 
 # 给用户添加任务量
 def util_management_add(username, task, user_obj, num):
@@ -16,16 +36,34 @@ def util_management_add(username, task, user_obj, num):
             image_obj = Image.objects.get(image_id=image_id)
             caption_obj = Caption.objects.get(image_obj=image_obj, caption_NO=1)
             if FirstStageWorkPool.objects.filter(caption_obj=caption_obj).exists():
+                # 该描述已分配到某用户的任务中
                 continue
             else:
                 t += 1
                 FirstStageWorkPool.objects.create(user_obj=user_obj, caption_obj=caption_obj, index_without_image=user_obj.total_amount_without_image+t)
                 if t == num:
+                    # 任务分配完毕
                     break
         
         User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image+t)
     else:
-        # TODO 给用户添加第二阶段的任务
+        # 给用户添加第二阶段的任务
+        t = 0 # 记录成功分配的个数
+        __MAX = len(ZhWithoutImage.objects.all())
+        zhs_without_image = ZhWithoutImage.objects.all()
+
+        for i in range(__MAX):   # 从0开始
+            zh_without_image_obj = zhs_without_image[i]
+            if SecondStageWorkPool.objects.filter(zh_without_image_obj=zh_without_image_obj).exists():
+                # 该不看图片译文已分配到某用户的任务中
+                continue
+            else:
+                t += 1
+                SecondStageWorkPool.objects.create(user_obj=user_obj, zh_without_image_obj=zh_without_image_obj, index_with_image=user_obj.total_amount_with_image+t)
+                if t == num:
+                    # 任务分配完毕
+                    break
+            
         User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+num)    
 
 # 创建第一阶段数据

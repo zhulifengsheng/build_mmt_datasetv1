@@ -1,7 +1,7 @@
-from django.http import Http404, JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
 from annotation.models import User, Caption, FirstStageWorkPool
-from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image, del_zh_without_image
+from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image, del_zh_without_image, util_management_del
 
 def login(request):
     if request.is_ajax() and request.method == 'POST':
@@ -100,6 +100,17 @@ def to_annotation_without_image(request):
         # 任务还在做
         return redirect('/annotation_without_image/{}/'.format(user_obj.now_index_without_image))
 
+def to_annotation_with_image(request):
+    # 根据用户名找到用户需要标注第几个caption
+    user_obj = User.objects.get(username=request.session.get("info")['username'])
+    
+    if user_obj.now_index_with_image > user_obj.total_amount_with_image:
+        # 任务都完成了
+        return redirect('/annotation_with_image/{}/'.format(user_obj.total_amount_with_image))
+    else:
+        # 任务还在做
+        return redirect('/annotation_with_image/{}/'.format(user_obj.now_index_with_image))
+
 def get_annotation_without_image(request):
     if request.is_ajax() and request.method == 'POST':
         user_obj = User.objects.get(username=request.session.get("info")['username'])
@@ -140,7 +151,7 @@ def get_annotation_without_image(request):
 
     raise Http404("非ajax访问了该api")
 
-# 后台管理
+# 后台数据管理
 def management_del(request):
     if request.is_ajax() and request.method == 'POST':
         num = int(request.POST.get('number'))
@@ -162,20 +173,11 @@ def management_del(request):
             return JsonResponse(error_context)
         user_obj = user_obj.first()
 
-        if task == 'first':
-            # 删除的任务量数大于用户的未标注的任务量数
-            if user_obj.total_amount_without_image - user_obj.now_index_without_image + 1 < num:
+        if task == 'first' or task == 'second':
+            if util_management_del(username, task, user_obj, num) == False:
                 return JsonResponse(error_context)
-            # 成功执行
-            User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image-num)
-        elif task == 'second':
-            # 删除的任务量数大于用户的未标注的任务量数
-            if user_obj.total_amount_with_image - user_obj.now_index_with_image + 1 < num:
-                return JsonResponse(error_context)
-            # 成功执行
-            User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image-num)
         else:
-            # 错误的任务标志
+            # 3 错误的任务标志
             return JsonResponse(error_context)
 
         return JsonResponse({'code': 0, 'success': True})

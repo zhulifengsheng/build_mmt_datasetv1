@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.http import Http404
 
-from annotation.models import FirstStageWorkPool, User, ZhWithoutImage
+from annotation.models import FirstStageWorkPool, User, ZhWithoutImage, SecondStageWorkPool, ZhWithImage
+from annotation.utils.backend import image_url
 
 def annotation_without_image(request, index_without_image):
     '''
@@ -9,8 +10,7 @@ def annotation_without_image(request, index_without_image):
     '''
     if request.session.get("info") is None or 'username' not in request.session.get("info"):
         raise Http404("非法访问")
-    
-    # 找到用户要标注的那个caption_id
+
     user_obj = User.objects.get(username=request.session.get("info")['username'])
     
     # 不可以访问超过标注总量的页面，不可以超前访问待标注的数据
@@ -42,3 +42,37 @@ def annotation_without_image(request, index_without_image):
         'qiyi': qiyi,   # 是否是歧义句
     }
     return render(request, 'annotation_without_image.html', res)
+
+def annotation_with_image(request, index_with_image):
+    '''
+    只可以访问当前要标注的数据 和 之前标注过的数据
+    '''
+    if request.session.get("info") is None or 'username' not in request.session.get("info"):
+        raise Http404("非法访问")
+    
+    user_obj = User.objects.get(username=request.session.get("info")['username'])
+
+    # 不可以访问超过标注总量的页面，不可以超前访问待标注的数据
+    if user_obj.total_amount_with_image < index_with_image or user_obj.now_index_with_image < index_with_image:
+        index = min(user_obj.now_index_with_image, user_obj.total_amount_with_image)
+        return redirect('/annotation_with_image/{}/'.format(index))
+    
+    # 传递到前端的参数
+    zh_without_image_obj = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index_with_image).zh_without_image_obj
+    caption_obj = zh_without_image_obj.caption_obj
+    image_obj = caption_obj.image_obj
+
+    zh = zh_without_image_obj.zh_without_image
+    zh_with_image_obj = ZhWithImage.objects.filter(zh_without_image_obj=zh_without_image_obj, user_that_annots_it=user_obj)
+    if zh_with_image_obj.exists():
+        zh = zh_with_image_obj.zh_with_image
+    
+    res = {
+        'annotated_amount': index_with_image, # 已标注的个数
+        'image_name': image_url(image_obj.image_name),
+        'is_admin': user_obj.is_admin,
+        'total': user_obj.total_amount_with_image,
+        'zh_without_image': zh_without_image_obj.zh_without_image,
+        'zh': zh,
+    }
+    return render(request, 'annotation_with_image.html', res)
