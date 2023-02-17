@@ -64,7 +64,8 @@ def util_management_add(username, task, user_obj, num):
                     # 任务分配完毕
                     break
             
-        User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+num)    
+        User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+t)  
+    return t
 
 # 创建第一阶段数据
 def create_zh_without_image(zh, caption_obj, user_obj):

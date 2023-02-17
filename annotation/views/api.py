@@ -1,5 +1,5 @@
 from django.http import Http404, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, HttpResponse
 from annotation.models import User, Caption, FirstStageWorkPool
 from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image, del_zh_without_image, util_management_del
 
@@ -92,7 +92,9 @@ def show_management_table(request):
 def to_annotation_without_image(request):
     # 根据用户名找到用户需要标注第几个caption
     user_obj = User.objects.get(username=request.session.get("info")['username'])
-    
+    if user_obj.total_amount_without_image == 0:
+        return HttpResponse('您还没有分配过该任务')
+
     if user_obj.now_index_without_image > user_obj.total_amount_without_image:
         # 任务都完成了
         return redirect('/annotation_without_image/{}/'.format(user_obj.total_amount_without_image))
@@ -103,7 +105,9 @@ def to_annotation_without_image(request):
 def to_annotation_with_image(request):
     # 根据用户名找到用户需要标注第几个caption
     user_obj = User.objects.get(username=request.session.get("info")['username'])
-    
+    if user_obj.total_amount_with_image == 0:
+        return HttpResponse('您还没有分配过该任务')
+
     if user_obj.now_index_with_image > user_obj.total_amount_with_image:
         # 任务都完成了
         return redirect('/annotation_with_image/{}/'.format(user_obj.total_amount_with_image))
@@ -207,7 +211,10 @@ def management_add(request):
         
         if task == 'first' or task == 'second':
             # 剩余任务量100，但是分配了300任务量的话，会默认分配完剩下的100任务量并向前端返回分配成功
-            util_management_add(username, task, user_obj, num)
+            t = util_management_add(username, task, user_obj, num)
+            # 一个任务都没有被分配
+            if t == 0:
+                return JsonResponse(error_context)
         else:
             # 3 错误的任务标志
             return JsonResponse(error_context)

@@ -6,9 +6,8 @@ def first_page(request):
     '''
     首页
     '''
-    # # 创建用户
+    # 创建用户
     # User.objects.create(username="lch", password="lv12345", is_admin=True)
-    # User.objects.create(username="test", password="test")
 
     # # 载入图片信息
     # import os
