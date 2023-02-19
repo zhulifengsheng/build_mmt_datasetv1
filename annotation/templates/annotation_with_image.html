@@ -60,7 +60,7 @@
           </div>
         </div>
 
-        <div id="right_region" class="layui-col-md4">
+        <div id="right_region" class="layui-col-md5">
           <!-- 不看图片标注的译文 -->
           <div class="layui-form-item layui-form-text">
             <label class="layui-form-label" style="margin-bottom: 0px;">不看图片标注的译文</label>
@@ -120,8 +120,9 @@
               style="width: 170px; margin-bottom: 0px; background-color: #009688; color: white; height: 40px;">请看图片标注译文</label>
 
             <div class="layui-input-block">
-              <textarea id="zh" name="zh" lay-verify="required" placeholder="请输入看着图片标注的译文" class="layui-textarea"
-                style="font-size: 18px; border-width: 2px; border-color: rgb(162, 156, 156);" onmouseup="fix_mouseUp_zh()">{{ zh }}</textarea>
+              <div id="zh" onmouseup="fix_mouseUp_zh()" contenteditable="true"
+                style="height: 100px; border: 2px solid black; font-size: 18px; border-color: rgb(162, 156, 156);">{{ zh
+                }}</div>
             </div>
           </div>
         </div>
@@ -213,36 +214,31 @@
       }
     }
 
-    // 划词方法
+    // 得到划词区域
     function getText() {
       var selection = window.getSelection();
       if (selection.anchorNode.data != selection.focusNode.data) {
         alert('划中的区域过大!!!');
         return '';
       }
-      // start = selection.anchorOffset;
-      // end = selection.focusOffset;
 
+      start = selection.anchorOffset;
+      end = selection.focusOffset;
+
+      // 未知代码
       // if (start > end) {
       //   t = start;
       //   start = end;
       //   end = t;
       // }
-      // if (selection.toString().length != end - start) {
-      //   alert('划中的区域的长度与划中位置索引的计算结果不一致!!!');
-      //   return '';
-      // }
-      // huazhong_html_dom = selection.anchorNode;
-      return selection.toString();
-    }
-
-    // 字符串查找
-    function find(str, cha, num) {
-      var x = str.indexOf(cha);
-      for (var i = 0; i < num; i++) {
-        x = str.indexOf(cha, x + 1);
+      if (selection.toString().length != end - start) {
+        alert('划中的区域的长度与划中位置索引的计算结果不一致!!!');
+        return '';
       }
-      return x;
+
+      huazhong_html_dom = selection.anchorNode;
+
+      return selection.toString();
     }
 
     // 鼠标抬起时，获得鼠标划中的字符串
@@ -253,30 +249,12 @@
       }
     }
 
-    function get_hidden_text(res) {
-      var old_word = new Array();
-      var i = -1;
-      var num = 0;
-      while (i < res.length - 1) {
-        i = res.indexOf('title=', i + 1);
-        if (i == -1) {
-          break;
-        }
-        else {
-          end = res.indexOf('">', i + 6);
-          tmp = res.substring(i + 7, end);
-          old_word[num] = tmp.substr(tmp.indexOf('：') + 1);
-          num += 1;
-        }
-      }
-      return old_word;
-    }
-
+    // 添加修正
     function fix_addlabel() {
-      // if (huazhong_html_dom.parentNode.style.getPropertyValue('background-color') != '') {  // span区域才有style background-color
-      //   alert('此处已添加过修正, 无法继续添加');
-      //   return;
-      // }
+      if (huazhong_html_dom.parentNode.style.getPropertyValue('background-color') != '') {  // span区域才有style background-color
+        alert('此处已添加过修正, 无法继续添加');
+        return;
+      }
 
       var options = $("#fix_select option:selected");
       var _p = $('#fix_p').val();
@@ -317,46 +295,22 @@
       }
       console.log(tohtml);
 
-      // 修改HTML
-      var origin_html = $('#zh').val();
-      var tmp = document.getElementById('zh');
-      console.log(tmp);
+      // 得到修改后的HTML
+      var origin_html = $('#zh').text();
+      console.log(origin_html);
 
-      var whichone = 0;
-      while (tmp.previousSibling != null)  //找到划词区域所在HTML代码中的位置
-      {
-        tmp = tmp.previousSibling;
-        if ('style' in tmp)  // span才有style
-          whichone += 1;
-      }
-
-      var pre_idx = -7; // </span>的长度等于7
-      if (whichone > 0) {   // 找到origin_html中第whichone个</span>所在的位置
-        pre_idx = find(origin_html, '</span>', whichone - 1);
-      }
-      pre_idx += 7;
-      var post_idx = pre_idx + html_dom_text.length;
-      var pre_substr = origin_html.substr(0, pre_idx); // 划中区域前面的子串
-      var post_substr = origin_html.substr(post_idx);  // 划中区域后面的子串
-
-      // 更新上面的html样式
-      html_dom_parent.innerHTML = pre_substr + html_dom_text.substr(0, start) + tohtml + html_dom_text.substr(end) + post_substr;
+      // 更新下面的文字
+      var new_html = tohtml;
+      html_dom_parent = document.getElementById('zh');
+      html_dom_parent.innerHTML = new_html;
 
       // 重置fix区域
-      $('#fix_input').val("输入修正后的词");
-
-      // 修改下面的文本
-      var new_sentence = html_dom_parent.innerHTML;
-      hidden_text_list = get_hidden_text(new_sentence);
-      for (var i = 0; i < hidden_text_list.length; i++) {
-        new_sentence = new_sentence.replace(/<span style="background-color:(.*?)<\/span>/, hidden_text_list[i]);
-      }
-      if (html_dom_parent.id.substr(4, 2) == 'zh') {
-        $('#' + html_dom_parent.id.substr(4)).val(new_sentence);
-        cal(new_sentence, html_dom_parent.id.substr(6));
-      }
+      $('#fix_input').val("");
+      $('#fix_p').val("");
+      $('#fix_select').val("");
     }
 
+    // 删除修正
     function fix_dellabel() {
       var tmp = huazhong_html_dom.parentNode;
       if (tmp.style.getPropertyValue('background-color') == '') {  // span区域才有style background-color
@@ -406,6 +360,34 @@
       //   $('.annot').attr('readonly', 'readonly');
       //   $('#submit_next').css("display", "none");
       // }
+    }
+
+    // 字符串查找
+    function find(str, cha, num) {
+      var x = str.indexOf(cha);
+      for (var i = 0; i < num; i++) {
+        x = str.indexOf(cha, x + 1);
+      }
+      return x;
+    }
+
+    function get_hidden_text(res) {
+      var old_word = new Array();
+      var i = -1;
+      var num = 0;
+      while (i < res.length - 1) {
+        i = res.indexOf('title=', i + 1);
+        if (i == -1) {
+          break;
+        }
+        else {
+          end = res.indexOf('">', i + 6);
+          tmp = res.substring(i + 7, end);
+          old_word[num] = tmp.substr(tmp.indexOf('：') + 1);
+          num += 1;
+        }
+      }
+      return old_word;
     }
 
   </script>
