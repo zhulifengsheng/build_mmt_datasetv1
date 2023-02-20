@@ -38,4 +38,5 @@ urlpatterns = [
     path('api/to_annotation_without_image/', api.to_annotation_without_image),
     path('api/get_annotation_without_image/', api.get_annotation_without_image),
     path('api/to_annotation_with_image/', api.to_annotation_with_image),
+    path('api/get_annotation_with_image/', api.get_annotation_with_image),
 ]

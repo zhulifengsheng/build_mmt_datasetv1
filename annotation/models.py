@@ -100,3 +100,22 @@ class ZhWithImage(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['zh_without_image_obj', 'user_that_annots_it'], name="user_annot_it_only_one"),
         ]
+
+class FixInfo(models.Model):
+    word_before_change = models.TextField(verbose_name='修正前单词')
+    word_after_change = models.TextField(verbose_name='修正后单词')
+
+    # 位置从0开始
+    word_before_change_start_pos = models.SmallIntegerField(verbose_name='修正前单词在旧中文中开始的位置')
+    word_before_change_end_pos = models.SmallIntegerField(verbose_name='修正前单词在旧中文中结束的位置')
+
+    word_after_change_start_pos = models.SmallIntegerField(verbose_name='修正后单词在新中文中开始的位置')
+    word_after_change_end_pos = models.SmallIntegerField(verbose_name='修正后单词在新中文中结束的位置')
+    
+    error_choices = (
+        (1, '名词'), (2, '动词'), (3, '形容词'),
+        (4, '数量'), (5, '细化'),
+    )
+    which_classification = models.SmallIntegerField(verbose_name='哪个修正类型', choices=error_choices)
+    
+    zh_with_image_obj = models.ForeignKey(to="ZhWithImage", to_field="zh_with_image_id", on_delete=models.CASCADE)

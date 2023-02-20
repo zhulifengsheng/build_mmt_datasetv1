@@ -1,7 +1,7 @@
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, HttpResponse
-from annotation.models import User, Caption, FirstStageWorkPool
-from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image, del_zh_without_image, util_management_del
+from annotation.models import User, Caption, FirstStageWorkPool, SecondStageWorkPool
+from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image, del_zh_without_image, util_management_del, parse
 
 def login(request):
     if request.is_ajax() and request.method == 'POST':
@@ -151,6 +151,44 @@ def get_annotation_without_image(request):
 
             # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
             index = min(user_obj.now_index_without_image, user_obj.total_amount_without_image)
+            return JsonResponse({'annotated_amount': str(index), 'finished': False})
+
+    raise Http404("非ajax访问了该api")
+
+def get_annotation_with_image(request):
+    if request.is_ajax() and request.method == 'POST':
+        user_obj = User.objects.get(username=request.session.get("info")['username'])
+        username = user_obj.username
+        
+        # 保存前端标注的不看图片标注数据
+        index = int(request.POST.get('index'))  # index表示用户的第几个标注任务
+        zh = request.POST.get('zh')
+        assert zh != '', '标注的译文不能为空'
+        
+        # 解析中文中的HTML标签
+        old_words, new_words, type_list, zh = parse(zh)
+        print(old_words, new_words, type_list, zh)
+
+        # 通过标注任务，找到用户的标注zh_without_image
+        zh_without_image_obj = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index).zh_without_image_obj
+
+        if user_obj.now_index_with_image == index:
+            # 标注的是新的数据
+            User.objects.filter(username=username).update(now_index_with_image=index+1)
+            # create_zh_with_image()
+            # create_fix_info()
+
+            if index+1 > user_obj.total_amount_with_image:
+                # 用户已标注完全部数据
+                return JsonResponse({'annotated_amount': str(index), 'finished': True})
+            else:
+                return JsonResponse({'annotated_amount': str(index+1), 'finished': False})
+        else:
+            # 标注的是已标注过的数据
+            # update or
+            # delete
+            # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
+            index = min(user_obj.now_index_with_image, user_obj.total_amount_with_image)
             return JsonResponse({'annotated_amount': str(index), 'finished': False})
 
     raise Http404("非ajax访问了该api")

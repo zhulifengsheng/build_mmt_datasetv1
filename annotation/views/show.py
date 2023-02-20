@@ -9,7 +9,6 @@ def show(request, image_id):
         user_obj = User.objects.get(username=request.session.get("info")['username'])
         is_admin = user_obj.is_admin
     
-    # TODO 显示已标注数据
     res = {
         'image_id': image_id,
         'image_name': image_url(Image.objects.get(image_id=image_id).image_name),

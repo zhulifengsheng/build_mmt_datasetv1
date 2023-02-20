@@ -73,20 +73,19 @@
           <div class="layui-input-block"
             style="text-align: center; margin-left: 0px; margin-top: 40px; margin-bottom: 0px;">
             <!-- 显示区 -->
-            <input id="fix_p" type="text" name="choosed_word" class="layui-input"
-              style="display: inline; width: 200px; height: 40px;" placeholder="显示划中的单词" disabled>
+            <input id="fix_p" type="text" class="layui-input" style="display: inline; width: 200px; height: 40px;"
+              placeholder="显示划中的单词" disabled>
 
             <!-- 下拉菜单 -->
             <div style="display: inline; margin-left: 5%; vertical-align: bottom;">
               <label style="font-size: 18px; display: inline;">修正类型</label>
-              <select id="fix_select" lay-ignore name="kind" style="display: inline; margin-left: 2%; height: 25px;">
+              <select id="fix_select" lay-ignore style="display: inline; margin-left: 2%; height: 25px;">
                 <option value=""></option>
                 <option value="0" style="color: HotPink;">名词</option>
                 <option value="1" style="color: Tomato;">动词</option>
                 <option value="2" style="color: DeepSkyBlue;">形容词</option>
                 <option value="3" style="color: palegreen;">数量</option>
-                <option value="4" style="color: MediumOrchid;">其他</option>
-                <option value="5" style="color: LightSteelBlue;">整句</option>
+                <option value="4" style="color: MediumOrchid;">细化</option>
               </select>
             </div>
           </div>
@@ -94,7 +93,7 @@
           <div class="layui-input-block"
             style="text-align: center; margin-left: 0px; margin-top: 30px; margin-bottom: 0px;">
             <!-- 输入区 -->
-            <input id="fix_input" type="text" name="fixed_word" placeholder="请输入修正后的词" class="layui-input"
+            <input id="fix_input" type="text" placeholder="请输入修正后的词" class="layui-input"
               style="display: inline; width: 200px; height: 40px;">
 
             <!-- 保存按钮 -->
@@ -109,8 +108,8 @@
         </div>
       </div>
 
-      <!-- 隐藏的输入，标注是用户的第几个任务 -->
-      <input class="layui-input" name="index" type="hidden" value="{{ annotated_amount }}">
+      <!-- 隐藏的输入，标注是用户的第几个任务
+      <input class="layui-input" name="index" type="hidden" value="{{ annotated_amount }}"> -->
 
       <div class="layui-row">
         <div class="layui-col-md7">
@@ -121,8 +120,7 @@
 
             <div class="layui-input-block">
               <div id="zh" onmouseup="fix_mouseUp_zh()" contenteditable="true"
-                style="height: 100px; border: 2px solid black; font-size: 18px; border-color: rgb(162, 156, 156);">{{ zh
-                }}</div>
+                style="height: 100px; border: 2px solid black; font-size: 18px; border-color: rgb(162, 156, 156);">{{ zh }}</div>
             </div>
           </div>
         </div>
@@ -141,16 +139,6 @@
 
     </form>
   </div>
-
-  <!-- <div id="fix" class="layui-card">
-    <p id="fix_p"></p>
-    <input id="fix_input" type="text" value="输入修正后的词" />
-    <button id="fix_button_del" onclick="fix_dellabel()">删除修正</button>
-    <select id="fix_select">
-      <option value="名词">名词修正</option>
-    </select>
-    <button id="fix_button_add" onclick="fix_addlabel()">添加修正</button>
-  </div> -->
 
   <div id="all_layerpage" style="text-align: center; margin-top: 40px;"></div>
 
@@ -176,6 +164,34 @@
             xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
           }
         }
+      });
+
+      //提交事件
+      form.on('submit(demo2)', function (data) {
+        $.ajax({
+          url: "/api/get_annotation_with_image/",
+          data: {
+            'index': '{{ annotated_amount }}',
+            'zh': document.getElementById('zh').innerHTML,
+          },  // 数据字典
+          async: true,
+          cache: false,
+          type: "POST",
+          dataType: "json",
+          success: function (result) {
+            if (result['finished']) {
+              layer.msg('任务已经都完成了！', { icon: 1 });
+              // 之后跳转到管理页面
+              setTimeout(function () {
+                $(window).attr('location', "/management/");
+              }, 1500);
+            }
+            else {
+              $(window).attr('location', "/annotation_with_image/" + result['annotated_amount']);
+            }
+          }
+        }); //ajax结束
+        return false;
       });
 
       laypage.render({
@@ -225,12 +241,12 @@
       start = selection.anchorOffset;
       end = selection.focusOffset;
 
-      // 未知代码
-      // if (start > end) {
-      //   t = start;
-      //   start = end;
-      //   end = t;
-      // }
+      // 从后向前划词时，更改start和end的顺序
+      if (start > end) {
+        t = start;
+        start = end;
+        end = t;
+      }
       if (selection.toString().length != end - start) {
         alert('划中的区域的长度与划中位置索引的计算结果不一致!!!');
         return '';
@@ -275,34 +291,47 @@
       var tohtml; // 加<span>后的HTML代码
       switch (options.val()) {
         case '0':
-          tohtml = '<span style="background-color:HotPink; margin: 0px 1px;" title=名词：' + _input + '>' + _p + '</span>';
+          tohtml = '<span style="background-color:HotPink; margin: 0px 1px;" title=名词：' + _p + '>' + _input + '</span>';
           break;
         case '1':
-          tohtml = '<span style="background-color:Tomato; margin: 0px 1px;" title=动词：' + _input + '>' + _p + '</span>';
+          tohtml = '<span style="background-color:Tomato; margin: 0px 1px;" title=动词：' + _p + '>' + _input + '</span>';
           break;
         case '2':
-          tohtml = '<span style="background-color:DeepSkyBlue; margin: 0px 1px;" title=形容词：' + _input + '>' + _p + '</span>';
+          tohtml = '<span style="background-color:DeepSkyBlue; margin: 0px 1px;" title=形容词：' + _p + '>' + _input + '</span>';
           break;
         case '3':
-          tohtml = '<span style="background-color:PaleGreen; margin: 0px 1px;" title=数量：' + _input + '>' + _p + '</span>';
+          tohtml = '<span style="background-color:PaleGreen; margin: 0px 1px;" title=数量：' + _p + '>' + _input + '</span>';
           break;
         case '4':
-          tohtml = '<span style="background-color:MediumOrchid; margin: 0px 1px;" title=其他：' + _input + '>' + _p + '</span>';
-          break;
-        case '5':
-          tohtml = '<span style="background-color:LightSteelBlue; margin: 0px 1px;" title=整句：' + _input + '>' + _p + '</span>';
+          tohtml = '<span style="background-color:MediumOrchid; margin: 0px 1px;" title=细化：' + _p + '>' + _input + '</span>';
           break;
       }
-      console.log(tohtml);
 
-      // 得到修改后的HTML
-      var origin_html = $('#zh').text();
-      console.log(origin_html);
+      // 修改HTML
+      var tmp = huazhong_html_dom;
+      var html_dom_parent = huazhong_html_dom.parentNode;
+      var html_dom_text = huazhong_html_dom.data;
+      var origin_html = html_dom_parent.innerHTML;  // 取出原HTML代码
 
-      // 更新下面的文字
-      var new_html = tohtml;
-      html_dom_parent = document.getElementById('zh');
-      html_dom_parent.innerHTML = new_html;
+      var whichone = 0;
+      while (tmp.previousSibling != null)  //找到划词区域所在HTML代码中的位置
+      {
+        tmp = tmp.previousSibling;
+        if ('style' in tmp)  // span才有style
+          whichone += 1;
+      }
+
+      var pre_idx = -7; // </span>的长度等于7
+      if (whichone > 0) {   // 找到origin_html中第whichone个</span>所在的位置
+        pre_idx = find(origin_html, '</span>', whichone - 1);
+      }
+      pre_idx += 7;
+      var post_idx = pre_idx + html_dom_text.length;
+      var pre_substr = origin_html.substr(0, pre_idx); // 划中区域前面的子串
+      var post_substr = origin_html.substr(post_idx);  // 划中区域后面的子串
+
+      // 更新下面的html样式
+      html_dom_parent.innerHTML = pre_substr + html_dom_text.substr(0, start) + tohtml + html_dom_text.substr(end) + post_substr;
 
       // 重置fix区域
       $('#fix_input').val("");
@@ -331,35 +360,19 @@
       pre_idx = find(origin_html, '<span style="background-color:', whichone - 1); // 找到origin_html中第whichone个</span>所在的位置
 
       var pre_substr = origin_html.substr(0, pre_idx); // 划中区域前面的子串
-      var post_substr = origin_html.substr(pre_idx).replace(/<span style="background-color:(.*?)>/, '').replace(/<\/span>/, '');  // 划中区域后面的子串
-      var tmp_id = huazhong_html_dom.parentNode.parentNode.id;  // 必须在下一行代码之前
-      huazhong_html_dom.parentNode.parentNode.innerHTML = pre_substr + post_substr;
+
+      // 得到修正之前的原文本
+      var old_word = get_hidden_text(origin_html.substr(pre_idx))[0];
+
+      var post_substr = origin_html.substr(pre_idx).replace(/<span (.*?)<\/span>/, old_word);  // 划中区域后面的子串
 
       // 修改下面的文本
-      var new_sentence = pre_substr + post_substr;
-      hidden_text_list = get_hidden_text(new_sentence);
-      for (var i = 0; i < hidden_text_list.length; i++) {
-        new_sentence = new_sentence.replace(/<span style="background-color:(.*?)<\/span>/, hidden_text_list[i]);
-      }
-      if (tmp_id.substr(4, 2) == 'zh') {
-        $('#' + tmp_id.substr(4)).val(new_sentence);
-        cal(new_sentence, tmp_id.substr(6));
-      }
+      huazhong_html_dom.parentNode.parentNode.innerHTML = pre_substr + post_substr;
 
-      // 关闭并重置fix区域
-      document.getElementById('fix').style.display = 'none';
-      $('#fix_input').val("输入修正后的词");
-
-      // 如果在上传修改fix信息之后，又修改了fix信息，则需要再次上传，才能标注下一个
-      var bodyClass = $('#submit_next').attr("class");
-      if (bodyClass.indexOf("layui-btn-disabled") <= 0) {
-        $('.annot').attr('readonly', 'readonly');
-        $('#submit_next').addClass('layui-btn-disabled').attr("disabled", true);
-      }
-      // if($('#submit_next').css("display")=="block"){
-      //   $('.annot').attr('readonly', 'readonly');
-      //   $('#submit_next').css("display", "none");
-      // }
+      // 重置fix区域
+      $('#fix_input').val("");
+      $('#fix_p').val("");
+      $('#fix_select').val("");
     }
 
     // 字符串查找
@@ -371,6 +384,7 @@
       return x;
     }
 
+    // 获取之前修改的文本
     function get_hidden_text(res) {
       var old_word = new Array();
       var i = -1;

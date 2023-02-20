@@ -1,5 +1,35 @@
-import os
+import os, re
 from annotation.models import User, RandomImageID, _MAX, Caption, Image, FirstStageWorkPool, ZhWithoutImage, SecondStageWorkPool
+
+# 解析看图片标注的中文HTML代码
+def parse(zh):
+    zh = '一只<span style="background-color:PaleGreen; margin: 0px 1px;" title="数量：黑狗在海边的">2</span>沙滩<span style="background-color:HotPink; margin: 0px 1px;" title="名词：上奔跑。">1</span>'
+    tmp1 = [i.end() for i in re.finditer('title="', zh)]
+    tmp2 = [i.start() for i in re.finditer('">', zh)]
+    assert len(tmp1) == len(tmp2)
+
+    old_words, type_list = [], []
+    for i,j in zip(tmp1, tmp2):
+        t = zh[i:j].split('：')
+        assert len(t) == 2
+        type_list.append(t[0])
+        old_words.append(t[-1])
+
+    tmp1 = [i.end() for i in re.finditer('">', zh)]
+    tmp2 = [i.start() for i in re.finditer('</span>', zh)]
+    assert len(tmp1) == len(tmp2)
+
+    new_words = []
+    for i,j in zip(tmp1, tmp2):
+        new_words.append(zh[i:j])
+
+    assert len(old_words) == len(new_words) == len(type_list)
+
+    # 得到修正之后的中文
+    for i in new_words:
+        zh = re.sub(r'<span(.*?)</span>', i, zh, 1)
+
+    return old_words, new_words, type_list, zh
 
 def image_url(image_name):
     path_list = ['img', 'coco']
