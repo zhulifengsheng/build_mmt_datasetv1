@@ -108,9 +108,6 @@
         </div>
       </div>
 
-      <!-- 隐藏的输入，标注是用户的第几个任务
-      <input class="layui-input" name="index" type="hidden" value="{{ annotated_amount }}"> -->
-
       <div class="layui-row">
         <div class="layui-col-md7">
           <!-- 标注看图片译文文本框 -->
@@ -132,7 +129,7 @@
           </div>
           <!-- 重置按钮 -->
           <div class="layui-form-item" style="text-align: center;">
-            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            <button id="reset" class="layui-btn layui-btn-primary">重置</button>
           </div>
         </div>
       </div>
@@ -213,6 +210,41 @@
   </script>
 
   <script type="text/javascript">
+    function decodeHtml(s) {
+      var HTML_DECODE = {
+        "&lt;": "<",
+        "&gt;": ">",
+        "&amp;": "&",
+        "&nbsp;": " ",
+        "&quot;": "\"",
+        "&copy;": ""
+
+        // Add more
+      };
+
+      var REGX_HTML_ENCODE = /"|&|'|<|>|[\x00-\x20]|[\x7F-\xFF]|[\u0100-\u2700]/g;
+
+      var REGX_HTML_DECODE = /&\w+;|&#(\d+);/g;
+
+      var REGX_TRIM = /(^\s*)|(\s*$)/g;
+
+      s = (s != undefined) ? s : "";
+      return (typeof s != "string") ? s :
+        s.replace(REGX_HTML_DECODE,
+          function ($0, $1) {
+            var c = HTML_DECODE[$0];
+            if (c == undefined) {
+              // Maybe is Entity Number
+              if (!isNaN($1)) {
+                c = String.fromCharCode(($1 == 160) ? 32 : $1);
+              } else {
+                c = $0;
+              }
+            }
+            return c;
+          });
+    };
+
     // 全局变量
     var huazhong_html_dom;  // 页面元素，划词调用getText()函数时，会记录下当前划词的HTML元素
     var start;        // 字符串索引，划词调用getText()函数时，会记录下当前划词区域的首位置
@@ -228,7 +260,16 @@
         $("#img").width((r_h * imgWidth) / l_h);
         $("#img").height(r_h);
       }
+
+      // 渲染后端传递给前端的中文
+      document.getElementById('zh').innerHTML = $('#zh').text();
     }
+
+    // 重置按钮
+    $('#reset').on('click', function () {
+      document.getElementById('zh').innerHTML = decodeHtml('{{ zh }}');
+      return false; // 禁止刷新页面
+    });
 
     // 得到划词区域
     function getText() {

@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
 from django.http import Http404
 
-from annotation.models import FirstStageWorkPool, User, ZhWithoutImage, SecondStageWorkPool, ZhWithImage
-from annotation.utils.backend import image_url
+from annotation.models import FirstStageWorkPool, User, ZhWithoutImage, SecondStageWorkPool, ZhWithImage, FixInfo
+from annotation.utils.backend import image_url, html_zh
 
 def annotation_without_image(request, index_without_image):
     '''
@@ -59,13 +59,15 @@ def annotation_with_image(request, index_with_image):
     
     # 传递到前端的参数
     zh_without_image_obj = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index_with_image).zh_without_image_obj
-    caption_obj = zh_without_image_obj.caption_obj
-    image_obj = caption_obj.image_obj
+    image_obj = zh_without_image_obj.caption_obj.image_obj
 
     zh = zh_without_image_obj.zh_without_image
     zh_with_image_obj = ZhWithImage.objects.filter(zh_without_image_obj=zh_without_image_obj, user_that_annots_it=user_obj)
     if zh_with_image_obj.exists():
-        zh = zh_with_image_obj.zh_with_image
+        zh = zh_with_image_obj.first().zh_with_image
+        # 找到修正信息，并进行HTML渲染
+        fix_infos = FixInfo.objects.filter(zh_with_image_obj=zh_with_image_obj)
+        zh = html_zh(zh, fix_infos)
     
     res = {
         'annotated_amount': index_with_image, # 已标注的个数

@@ -1,7 +1,17 @@
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, HttpResponse
 from annotation.models import User, Caption, FirstStageWorkPool, SecondStageWorkPool
-from annotation.utils.backend import util_management_add, create_zh_without_image, update_zh_without_image, del_zh_without_image, util_management_del, parse
+from annotation.utils.backend import (
+    util_management_add, 
+    create_zh_without_image, 
+    update_zh_without_image, 
+    del_zh_without_image, 
+    util_management_del, 
+    parse,
+    create_zh_with_image,
+    create_fix_info,
+    del_zh_with_image_and_fixinfos,
+)
 
 def login(request):
     if request.is_ajax() and request.method == 'POST':
@@ -166,17 +176,16 @@ def get_annotation_with_image(request):
         assert zh != '', '标注的译文不能为空'
         
         # 解析中文中的HTML标签
-        old_words, new_words, type_list, zh = parse(zh)
-        print(old_words, new_words, type_list, zh)
-
+        old_words, old_words_pos, new_words, new_words_pos, type_list, zh = parse(zh)
+        
         # 通过标注任务，找到用户的标注zh_without_image
         zh_without_image_obj = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index).zh_without_image_obj
 
         if user_obj.now_index_with_image == index:
             # 标注的是新的数据
             User.objects.filter(username=username).update(now_index_with_image=index+1)
-            # create_zh_with_image()
-            # create_fix_info()
+            zh_with_image_obj = create_zh_with_image(zh, user_obj, zh_without_image_obj)
+            create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
 
             if index+1 > user_obj.total_amount_with_image:
                 # 用户已标注完全部数据
@@ -185,8 +194,11 @@ def get_annotation_with_image(request):
                 return JsonResponse({'annotated_amount': str(index+1), 'finished': False})
         else:
             # 标注的是已标注过的数据
-            # update or
-            # delete
+            # 先delete 
+            del_zh_with_image_and_fixinfos(zh_without_image_obj, user_obj)
+            # 再create
+            zh_with_image_obj = create_zh_with_image(zh, user_obj, zh_without_image_obj)
+            create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
             # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
             index = min(user_obj.now_index_with_image, user_obj.total_amount_with_image)
             return JsonResponse({'annotated_amount': str(index), 'finished': False})

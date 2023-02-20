@@ -105,7 +105,7 @@ class FixInfo(models.Model):
     word_before_change = models.TextField(verbose_name='修正前单词')
     word_after_change = models.TextField(verbose_name='修正后单词')
 
-    # 位置从0开始
+    # 位置从0开始，左开右闭区间
     word_before_change_start_pos = models.SmallIntegerField(verbose_name='修正前单词在旧中文中开始的位置')
     word_before_change_end_pos = models.SmallIntegerField(verbose_name='修正前单词在旧中文中结束的位置')
 
