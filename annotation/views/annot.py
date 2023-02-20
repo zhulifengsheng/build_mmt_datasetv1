@@ -66,7 +66,7 @@ def annotation_with_image(request, index_with_image):
     if zh_with_image_obj.exists():
         zh = zh_with_image_obj.first().zh_with_image
         # 找到修正信息，并进行HTML渲染
-        fix_infos = FixInfo.objects.filter(zh_with_image_obj=zh_with_image_obj)
+        fix_infos = FixInfo.objects.filter(zh_with_image_obj=zh_with_image_obj.first())
         zh = html_zh(zh, fix_infos)
     
     res = {

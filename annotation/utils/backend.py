@@ -13,9 +13,29 @@ from annotation.models import (
 )
 
 # 根据找到的修正信息进行HTML渲染
+dic_error_indexs = {
+    1: '名词',
+    2: '动词',
+    3: '形容词',
+    4: '数量',
+    5: '细化',
+}
 def html_zh(zh, fix_infos):
+    old_words = [i.word_before_change for i in fix_infos]
+    new_words = [i.word_after_change for i in fix_infos]
+    error_indexs = [dic_error_indexs[i.which_classification] for i in fix_infos]
+    new_words_pos = [(i.word_after_change_start_pos, i.word_after_change_end_pos) for i in fix_infos]
+    print(zh, old_words, new_words, error_indexs, new_words_pos)
 
-    return '1<span style="background-color:HotPink; margin: 0px 1px;" title="名词：运火车">1</span>da22'
+    pre_i = 0
+    for i, j in new_words_pos: 
+        # print(zh[pre_i:i])
+        # print(zh[i:j])
+        # print(zh[j:])
+        pre_i = j
+    
+
+    # return '1<span style="background-color:HotPink; margin: 0px 1px;" title="名词：运火车">1</span>da22'
     return zh
 
 # 解析看图片标注的中文HTML代码
@@ -56,20 +76,24 @@ def parse(zh):
     
     old_words_pos = []
     # 计算修正前单词在旧中文中的位置
-    t = len(x[0])
+    index = 0
+    t = len(x[index])
     for i in old_words:
         l = len(i)
         old_words_pos.append((t, t+l))
-        t += l
-
+        index += 1
+        t += l + len(x[index])
+        
     new_words_pos = []
     # 计算修正后单词在新中文中的位置
-    t = len(x[0])
+    index = 0
+    t = len(x[index])
     for i in new_words:
         l = len(i)
         new_words_pos.append((t, t+l))
-        t += l
-
+        index += 1
+        t += l + len(x[index])
+    
     assert len(old_words) == len(old_words_pos) == len(new_words_pos)
 
     # 得到修正之后的中文
