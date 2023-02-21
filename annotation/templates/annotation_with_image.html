@@ -267,7 +267,7 @@
 
     // 重置按钮
     $('#reset').on('click', function () {
-      document.getElementById('zh').innerHTML = decodeHtml('{{ zh }}');
+      document.getElementById('zh').innerHTML = '{{ zh_without_image }}';
       return false; // 禁止刷新页面
     });
 

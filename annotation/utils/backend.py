@@ -20,23 +20,44 @@ dic_error_indexs = {
     4: '数量',
     5: '细化',
 }
+
+def _tohtml(old_word, new_word, error_kind):    # 转换为HTML代码的函数
+    if error_kind == '名词':
+        tohtml = '<span style="background-color:HotPink; margin: 0px 1px;" title=名词：' + old_word + '>' + new_word + '</span>';
+    elif error_kind == '动词':
+        tohtml = '<span style="background-color:Tomato; margin: 0px 1px;" title=动词：' + old_word + '>' + new_word + '</span>';
+    elif error_kind == '形容词':
+        tohtml = '<span style="background-color:DeepSkyBlue; margin: 0px 1px;" title=形容词：' + old_word + '>' + new_word + '</span>';
+    elif error_kind == '数量':
+        tohtml = '<span style="background-color:PaleGreen; margin: 0px 1px;" title=数量：' + old_word + '>' + new_word + '</span>';
+    elif error_kind == '细化':
+        tohtml = '<span style="background-color:MediumOrchid; margin: 0px 1px;" title=细化：' + old_word + '>' + new_word + '</span>';
+
+    return tohtml
+
 def html_zh(zh, fix_infos):
     old_words = [i.word_before_change for i in fix_infos]
     new_words = [i.word_after_change for i in fix_infos]
-    error_indexs = [dic_error_indexs[i.which_classification] for i in fix_infos]
+    error_kinds = [dic_error_indexs[i.which_classification] for i in fix_infos]
     new_words_pos = [(i.word_after_change_start_pos, i.word_after_change_end_pos) for i in fix_infos]
-    print(zh, old_words, new_words, error_indexs, new_words_pos)
 
+    # 为被修正的部分
+    word_list = []
     pre_i = 0
     for i, j in new_words_pos: 
-        # print(zh[pre_i:i])
-        # print(zh[i:j])
-        # print(zh[j:])
+        word_list.append(zh[pre_i:i])
         pre_i = j
+    word_list.append(zh[pre_i:])
     
+    # 生成HTML中文
+    index = 0
+    new_zh = word_list[index]
+    for i, j, k in zip(old_words, new_words, error_kinds):
+        tohtml = _tohtml(i, j, k)
+        index += 1
+        new_zh = new_zh + tohtml + word_list[index]
 
-    # return '1<span style="background-color:HotPink; margin: 0px 1px;" title="名词：运火车">1</span>da22'
-    return zh
+    return new_zh
 
 # 解析看图片标注的中文HTML代码
 def parse(zh):
@@ -204,7 +225,7 @@ def create_zh_with_image(zh, user_obj, zh_without_image_obj):
 # 删除已标注过的第二阶段数据
 def del_zh_with_image_and_fixinfos(user_obj, zh_without_image_obj):
     # 先删除修正信息，再删除中文
-    zh_with_image_obj = ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj)
+    zh_with_image_obj = ZhWithImage.objects.get(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj)
     FixInfo.objects.filter(zh_with_image_obj=zh_with_image_obj).delete()
     ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
 

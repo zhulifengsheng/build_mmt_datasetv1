@@ -185,7 +185,8 @@ def get_annotation_with_image(request):
             # 标注的是新的数据
             User.objects.filter(username=username).update(now_index_with_image=index+1)
             zh_with_image_obj = create_zh_with_image(zh, user_obj, zh_without_image_obj)
-            create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
+            if old_words is not None:
+                create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
 
             if index+1 > user_obj.total_amount_with_image:
                 # 用户已标注完全部数据
@@ -195,10 +196,13 @@ def get_annotation_with_image(request):
         else:
             # 标注的是已标注过的数据
             # 先delete 
-            del_zh_with_image_and_fixinfos(zh_without_image_obj, user_obj)
+            del_zh_with_image_and_fixinfos(user_obj, zh_without_image_obj)
+            
             # 再create
             zh_with_image_obj = create_zh_with_image(zh, user_obj, zh_without_image_obj)
-            create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
+            if old_words is not None:
+                create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
+            
             # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
             index = min(user_obj.now_index_with_image, user_obj.total_amount_with_image)
             return JsonResponse({'annotated_amount': str(index), 'finished': False})
