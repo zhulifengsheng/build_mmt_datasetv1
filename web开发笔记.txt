@@ -5,7 +5,7 @@ Django
 	4. HTML模板放在templates文件夹下
 	5. 后端接收前端数据的处理函数放在views文件夹下
 	
-MYSQL
+MYSQL 5.7
 	1. pip install mysqlclient
 	2. create database mmt_databasev1 DEFAULT CHARSET utf8 COLLATE utf8_general_ci; ——创建数据库  
 	3. 导入数据库
@@ -14,6 +14,9 @@ MYSQL
 		source data.sql;
 	4. 导出数据库
 		mysqldump -uroot -p --default-character-set=utf8 mmt_databasev1 > data.sql
+
+	5. Linux服务器查看mysql状态
+	systemctl status mysqld.service
 
 Git
 	1. git config --global http.proxy http://127.0.0.1:7890
