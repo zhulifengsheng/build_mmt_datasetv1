@@ -1,5 +1,4 @@
 from annotation.models import (
-    User, 
     RandomImageID, 
     _MAX, 
     Caption, 
@@ -8,35 +7,45 @@ from annotation.models import (
     ZhWithoutImage, 
     SecondStageWorkPool,
     ZhWithImage,
-    FixInfo
+    FixInfo,
+)
+from annotation.utils.backend import (
+    get_total_amount_with_image,
+    get_total_amount_without_image,
 )
 
 # 给用户删除任务量
-def util_management_del(username, task, user_obj, num):
+def util_management_del(task, user_obj, num):
     if task == 'first':
-        if user_obj.total_amount_without_image - user_obj.now_index_without_image + 1 < num:
+        total_amount_without_image = get_total_amount_without_image(user_obj)
+        if total_amount_without_image - user_obj.now_index_without_image + 1 < num:
+            # 删除的任务量大于未标注的任务量
             return False
         else:
-            User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image-num)
             # 删除工作池中已分配的任务
             for i in range(num):
-                FirstStageWorkPool.objects.filter(user_obj=user_obj, index_without_image=user_obj.total_amount_without_image-i).delete()
+                FirstStageWorkPool.objects.filter(user_obj=user_obj, index_without_image=total_amount_without_image-i).delete()
+    
     else:
-        if user_obj.total_amount_with_image - user_obj.now_index_with_image + 1 < num:
+        total_amount_with_image = get_total_amount_without_image(user_obj)
+        if total_amount_with_image - user_obj.now_index_with_image + 1 < num:
+            # 删除的任务量大于未标注的任务量
             return False
         else:
-            User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image-num)
             # 删除工作池中已分配的任务
             for i in range(num):
-                SecondStageWorkPool.objects.filter(user_obj=user_obj, index_with_image=user_obj.total_amount_with_image-i).delete()
+                SecondStageWorkPool.objects.filter(user_obj=user_obj, index_with_image=total_amount_with_image-i).delete()
 
     return True
 
 # 给用户添加任务量
-def util_management_add(username, task, user_obj, num):
+def util_management_add(task, user_obj, num):
     if task == 'first':
         # 给用户添加第一阶段的任务
+        total_amount_without_image = get_total_amount_without_image(user_obj)
+
         t = 0   # 记录成功分配的个数
+
         for i in range(1, _MAX+1):
             image_id = RandomImageID.objects.get(Random_imageID_id=i).image_id
             image_obj = Image.objects.get(image_id=image_id)
@@ -47,79 +56,49 @@ def util_management_add(username, task, user_obj, num):
                 continue
             else:
                 t += 1
-                FirstStageWorkPool.objects.create(user_obj=user_obj, caption_obj=caption_obj, index_without_image=user_obj.total_amount_without_image+t)
+                FirstStageWorkPool.objects.create(user_obj=user_obj, caption_obj=caption_obj, index_without_image=total_amount_without_image+t)
                 if t == num:
                     # 任务分配完毕
                     break
-        # 更新总任务量
-        User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image+t)
     
     else:
         # 给用户添加第二阶段的任务
+        total_amount_with_image = get_total_amount_with_image(user_obj)
+
         t = 0 # 记录成功分配的个数
-        __MAX = len(ZhWithoutImage.objects.all())
         zhs_without_image = ZhWithoutImage.objects.all()
+        __MAX = len(zhs_without_image)
 
         for i in range(__MAX):   # 从0开始
             zh_without_image_obj = zhs_without_image[i]
+            
             if SecondStageWorkPool.objects.filter(zh_without_image_obj=zh_without_image_obj).exists():
                 # 该不看图片译文已分配到某用户的任务中
                 continue
             else:
                 t += 1
-                SecondStageWorkPool.objects.create(user_obj=user_obj, zh_without_image_obj=zh_without_image_obj, index_with_image=user_obj.total_amount_with_image+t)
+                SecondStageWorkPool.objects.create(user_obj=user_obj, zh_without_image_obj=zh_without_image_obj, index_with_image=total_amount_with_image+t)
                 if t == num:
                     # 任务分配完毕
                     break
-        # 更新总任务量
-        User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+t)  
     
     return t
 
-# 创建第一阶段数据
+# 创建不看图片标注中文
 def create_zh_without_image(zh, caption_obj, user_obj):
     ZhWithoutImage.objects.create(zh_without_image=zh, caption_obj=caption_obj, user_that_annots_it=user_obj)
 
-# 更新已标注过的第一阶段数据
-def update_zh_without_image(zh, caption_obj, user_obj, index):
-    '''
-        说明：对不看图片标注的译文来说，更新的同时还需要对其链接的看图片标注进行删除
-        return: 一个布尔值，False表示没有更新看图片的中文；True表示更新了看图片的中文
-    '''
-    # 先通过 caption_obj 和 user_obj 找到数据，然后进行修改
-    zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
-    
-    if len(zhs) == 1 and index == 1:
-        # 之前没有标注第二个翻译，现在才标注第二个翻译
-        create_zh_without_image(zh, caption_obj, user_obj)
-        return False
+# 更新不看图片标注中文
+def update_zh_without_image(zh_without_image_obj, user_obj, zh):
+    ZhWithoutImage.objects.filter(zh_without_image_obj_id=zh_without_image_obj.id).update(zh_without_image=zh)
 
-    # 之前的中文和当前的中文不相同时，才会进行更新操作
-    if zhs[index].zh_without_image != zh:
-        id = zhs[index].zh_without_image_id
-        ZhWithoutImage.objects.filter(zh_without_image_id=id).update(zh_without_image=zh)
-    
-        # 找到其链接的看图片标注中文，并将其删除
-        zh_without_image_obj = ZhWithoutImage.objects.get(zh_without_image_id=id)
-        t = ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj)
-        
-        # 如果存在级联的第二阶段标注数据，则将其删除
-        if t.exists():
-            t.delete()
-            return True
-        return False
+    # 找到该不看图片标注中文级联的看图片标注中文，并将其删除（如不存在级联的看图片标注中文，此语句什么都不会执行）
+    ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
 
-    return False
-
-# 删除已标注过的第一阶段数据（只会对第二个标注的中文进行删除操作）
-def del_zh_without_image(caption_obj, user_obj):
-    '''
-        说明：如果第二个标注存在则删除它，若不存在则不执行
-    '''
-    zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
-    if len(zhs) != 1:
-        id = zhs[1].zh_without_image_id
-        ZhWithoutImage.objects.filter(zh_without_image_id=id).delete()
+    t = SecondStageWorkPool.objects.filter(zh_without_image_obj=zh_without_image_obj)
+    # 如果该不看图片标注中文已被添加到第二阶段的标注任务中，需要对其重新标注
+    if t.exists():
+        t.update(is_finished=False)
 
 '''TODO'''
 # 创建第二阶段数据

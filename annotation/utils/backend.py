@@ -126,8 +126,11 @@ def get_total_amount_without_image(user_obj):
 def get_total_amount_with_image(user_obj):
     return len(SecondStageWorkPool.objects.filter(user_obj=user_obj).all())
 
-# 第一阶段的标注修改之后，用户的第二阶段标注数据也需要修改，所以需要更新用户的第二阶段now_index
-def update_user_now_index(user_obj):
-    SecondStageWorkPool.objects.filter(user_obj=user_obj)
+# 得到用户第二阶段任务的第一个未完成任务的索引
+def get_first_isnot_finished_index(user_obj):
+    t = SecondStageWorkPool.objects.filter(user_obj=user_obj).all()
+    for index, i in enumerate(t):
+        if i.is_finished == False:
+            return index + 1
 
-    return 1
+    return -1

@@ -1,15 +1,21 @@
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, HttpResponse
-from annotation.models import User, Caption, FirstStageWorkPool, SecondStageWorkPool, ZhWithoutImage
+from annotation.models import (
+    User, 
+    Caption, 
+    FirstStageWorkPool, 
+    SecondStageWorkPool, 
+    ZhWithoutImage, 
+    ZhWithImage,
+)
 from annotation.utils.operate_dataset import (
     util_management_add, 
     create_zh_without_image, 
-    update_zh_without_image, 
-    del_zh_without_image,
     util_management_del, 
     create_zh_with_image,
     create_fix_info,
     del_zh_with_image_and_fixinfos,
+    update_zh_without_image,
 )
 from annotation.utils.backend import (
     parse,
@@ -135,7 +141,6 @@ def to_annotation_with_image(request):
         return redirect('/annotation_with_image/{}/'.format(user_obj.now_index_with_image))
 
 # 接收前端数据进行处理
-# TODO
 def get_annotation_without_image(request):
     if request.is_ajax() and request.method == 'POST':
         user_obj = User.objects.get(username=request.session.get("info")['username'])
@@ -150,11 +155,7 @@ def get_annotation_without_image(request):
         # 通过标注任务，找到用户标注的caption
         caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
         
-        # 更新Caption是否有歧义
-
-        if user_obj.now_index_without_image == index:
-            # 标注的是新的数据
-
+        if user_obj.now_index_without_image == index:   # 标注的是新的数据
             # 更新当前标注索引
             User.objects.filter(username=username).update(now_index_without_image=index+1)
             
@@ -162,41 +163,40 @@ def get_annotation_without_image(request):
             create_zh_without_image(zh1, caption_obj, user_obj)
             if zh2 != '':
                 create_zh_without_image(zh2, caption_obj, user_obj)
+                # 更新Caption为有歧义
+                caption_obj.is_ambiguity = True
+                caption_obj.save()
             
-            if index+1 > user_obj.total_amount_without_image:
-                # 用户已标注完全部数据
+            if index+1 > get_total_amount_without_image(user_obj):
+                # 用户已标注完全部数据，finished=True会让页面自动跳转至管理页面
                 return JsonResponse({'annotated_amount': str(index), 'finished': True})
             else:
                 return JsonResponse({'annotated_amount': str(index+1), 'finished': False})
-        else:
-            # 标注的是已标注过的数据
+        
+        else:   # 标注的是已标注过的数据
+            # 得到之前标注的中文数据
+            zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
 
-            flag_is_delete_second_zh = []
-            # 更新第一个标注的不看图片译文
-            flag_is_delete_second_zh.append(update_zh_without_image(zh1, caption_obj, user_obj, 0))
+            # 更新第一个标注的不看图片译文，只有中文不一样才会执行
+            if zhs[0].zh_without_image != zh1:
+                update_zh_without_image(zhs[0], user_obj, zh1)
             
             # 更新第二个标注的不看图片译文
-            if zh2 == '':
-                # 当第二个标注为空时，仅删除掉这第二个标注即可
-                del_zh_without_image(caption_obj, user_obj)
-                # TODO 更新total_index
+            if len(zhs) == 1:
+                # 之前没有标注第二个翻译，现在才标注第二个翻译
+                create_zh_without_image(zh2, caption_obj, user_obj)
             else:
-                # 更新第二个标注的不看图片译文
-                flag_is_delete_second_zh.append(update_zh_without_image(zh2, caption_obj, user_obj, 1))
-            
-            # 第一阶段的标注修改之后，用户的第二阶段标注数据也需要修改，所以需要更新用户的第二阶段now_index
-            print(flag_is_delete_second_zh)
+                if zh2 == '':
+                    # 删除不看图片标注的中文，会级联删除掉第二阶段任务池中的任务 + 对应的看图片标注的中文
+                    ZhWithoutImage.objects.filter(zh_without_image_id=zhs[1]).delete()
+                
+                    # 更新Caption为无歧义
+                    caption_obj.is_ambiguity = False
+                    caption_obj.save()
+                else:
+                    update_zh_without_image(zhs[1], user_obj, zh2)
 
-            # 找到当前修改的是那个不看图片中文
-            caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
-            zhwithoutimage = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
-            SecondStageWorkPool.objects.filter(user_obj=user_obj, index_with_image=1).update(is_finished=False)
-            # TODO
-            # SecondStageWorkPool.objects.filter(user_obj=user_obj, index_with_image=1).update(is_finished=False)
-            # User.objects.filter(username=username).upadte(now_index_with_image=1)
-
-            # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
-            index = min(user_obj.now_index_without_image, user_obj.total_amount_without_image)
+            # 修改过去标注过的译文时，不进行页面跳转，前端提交之后还是返回当前页面
             return JsonResponse({'annotated_amount': str(index), 'finished': False})
 
     raise Http404("非ajax访问了该api")
@@ -269,7 +269,7 @@ def management_del(request):
         user_obj = user_obj.first()
 
         if task == 'first' or task == 'second':
-            if util_management_del(username, task, user_obj, num) == False:
+            if util_management_del(task, user_obj, num) == False:
                 return JsonResponse(error_context)
         else:
             # 3 错误的任务标志
@@ -301,8 +301,8 @@ def management_add(request):
         user_obj = user_obj.first()
         
         if task == 'first' or task == 'second':
-            # 剩余任务量100，但是分配了300任务量的话，会默认分配完剩下的100任务量并向前端返回分配成功
-            t = util_management_add(username, task, user_obj, num)
+            # 如果剩余任务量100，但是分配了300任务量的话，会默认分配完剩下的100任务量并向前端返回分配成功
+            t = util_management_add(task, user_obj, num)
             # 一个任务都没有被分配
             if t == 0:
                 return JsonResponse(error_context)
