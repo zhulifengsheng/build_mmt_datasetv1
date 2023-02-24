@@ -233,7 +233,7 @@ def get_annotation_with_image(request):
 
         # 页面跳转
         index = get_first_isnot_finished_index(user_obj)    # 找到下一个未标注的数据
-        if index == get_total_amount_with_image(user_obj):
+        if index > get_total_amount_with_image(user_obj):
             # 用户已标注完全部数据，finished=True会让页面自动跳转至管理页面
             return JsonResponse({'annotated_amount': str(index), 'finished': True})
         else:

@@ -101,8 +101,9 @@ def create_zh_with_image(zh, user_obj, zh_without_image_obj):
 
 # 删除已标注过的第二阶段数据
 def del_zh_with_image_and_fixinfos(user_obj, zh_without_image_obj):
-    zh_with_image_obj = ZhWithImage.objects.get(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj)
-    if zh_with_image_obj:
+    zh_with_image_obj = ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj)
+    if zh_with_image_obj.exists():
+        zh_with_image_obj = zh_with_image_obj.first()
         # 先删除修正信息，再删除看图片标注的中文
         FixInfo.objects.filter(zh_with_image_obj=zh_with_image_obj).delete()
         ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
