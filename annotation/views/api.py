@@ -130,16 +130,17 @@ def to_annotation_with_image(request):
     # 根据用户名找到用户需要标注第几个caption
     user_obj = User.objects.get(username=request.session.get("info")['username'])
     total_amount_with_image = get_total_amount_with_image(user_obj)
+    now_index = get_first_isnot_finished_index(user_obj)
     
     if total_amount_with_image == 0:
         return HttpResponse('您还没有分配过该任务')
 
-    if get_isnot_finished_amout(user_obj)+1 > total_amount_with_image:
+    if now_index > total_amount_with_image:
         # 任务都完成了
         return redirect('/annotation_with_image/{}/'.format(total_amount_with_image))
     else:
         # 任务还在做
-        return redirect('/annotation_with_image/{}/'.format(get_first_isnot_finished_index(user_obj)))
+        return redirect('/annotation_with_image/{}/'.format(now_index))
 
 # 接收前端数据进行处理
 def get_annotation_without_image(request):
@@ -185,11 +186,12 @@ def get_annotation_without_image(request):
             # 更新第二个标注的不看图片译文
             if len(zhs) == 1:
                 # 之前没有标注第二个翻译，现在才标注第二个翻译
-                create_zh_without_image(zh2, caption_obj, user_obj)
+                if zh2 != '':
+                    create_zh_without_image(zh2, caption_obj, user_obj)
             else:
                 if zh2 == '':
                     # 删除不看图片标注的中文，会级联删除掉第二阶段任务池中的任务 + 对应的看图片标注的中文
-                    ZhWithoutImage.objects.filter(zh_without_image_id=zhs[1]).delete()
+                    ZhWithoutImage.objects.filter(zh_without_image_id=zhs[1].zh_without_image_id).delete()
                 
                     # 更新Caption为无歧义
                     caption_obj.is_ambiguity = False
@@ -202,11 +204,9 @@ def get_annotation_without_image(request):
 
     raise Http404("非ajax访问了该api")
 
-# TODO
 def get_annotation_with_image(request):
     if request.is_ajax() and request.method == 'POST':
         user_obj = User.objects.get(username=request.session.get("info")['username'])
-        username = user_obj.username
         
         # 保存前端标注的不看图片标注数据
         index = int(request.POST.get('index'))  # index表示用户的第几个标注任务
@@ -216,32 +216,27 @@ def get_annotation_with_image(request):
         # 解析中文中的HTML标签
         old_words, old_words_pos, new_words, new_words_pos, type_list, zh = parse(zh)
         
-        # 通过标注任务，找到用户的标注zh_without_image
-        zh_without_image_obj = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index).zh_without_image_obj
+        # 通过标注任务，找到用户的标注那个zh_without_image
+        sswp = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index)
+        zh_without_image_obj = sswp.zh_without_image_obj
 
-        if user_obj.now_index_with_image == index:
-            # 标注的是新的数据
-            User.objects.filter(username=username).update(now_index_with_image=index+1)
-            zh_with_image_obj = create_zh_with_image(zh, user_obj, zh_without_image_obj)
-            if old_words is not None:
-                create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
+        # 该数据已标注完了，修改标注记录
+        sswp.is_finished = True
+        sswp.save()
 
-            if index+1 > get_total_amount_with_image(user_obj):
-                # 用户已标注完全部数据
-                return JsonResponse({'annotated_amount': str(index), 'finished': True})
-            else:
-                return JsonResponse({'annotated_amount': str(index+1), 'finished': False})
+        # 先delete这个看图片标注的中文和相关修正信息
+        del_zh_with_image_and_fixinfos(user_obj, zh_without_image_obj)
+
+        zh_with_image_obj = create_zh_with_image(zh, user_obj, zh_without_image_obj)
+        if old_words is not None:
+            create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
+
+        # 页面跳转
+        index = get_first_isnot_finished_index(user_obj)    # 找到下一个未标注的数据
+        if index == get_total_amount_with_image(user_obj):
+            # 用户已标注完全部数据，finished=True会让页面自动跳转至管理页面
+            return JsonResponse({'annotated_amount': str(index), 'finished': True})
         else:
-            # 标注的是已标注过的数据
-            # 先delete 
-            del_zh_with_image_and_fixinfos(user_obj, zh_without_image_obj)
-            
-            # 再create
-            zh_with_image_obj = create_zh_with_image(zh, user_obj, zh_without_image_obj)
-            if old_words is not None:
-                create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
-            
-            # 修改过去标注过的译文时，不进行页面跳转，前端提交之后还是返回当前页面
             return JsonResponse({'annotated_amount': str(index), 'finished': False})
 
     raise Http404("非ajax访问了该api")

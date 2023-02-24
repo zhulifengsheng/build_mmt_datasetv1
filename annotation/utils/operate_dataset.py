@@ -84,7 +84,7 @@ def create_zh_without_image(zh, caption_obj, user_obj):
 
 # 更新不看图片标注中文
 def update_zh_without_image(zh_without_image_obj, user_obj, zh):
-    ZhWithoutImage.objects.filter(zh_without_image_obj_id=zh_without_image_obj.id).update(zh_without_image=zh)
+    ZhWithoutImage.objects.filter(zh_without_image_id=zh_without_image_obj.zh_without_image_id).update(zh_without_image=zh)
 
     # 找到该不看图片标注中文级联的看图片标注中文，并将其删除（如不存在级联的看图片标注中文，此语句什么都不会执行）
     ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
@@ -94,7 +94,6 @@ def update_zh_without_image(zh_without_image_obj, user_obj, zh):
     if t.exists():
         t.update(is_finished=False)
 
-'''TODO'''
 # 创建第二阶段数据
 def create_zh_with_image(zh, user_obj, zh_without_image_obj):
     ZhWithImage.objects.create(zh_with_image=zh, zh_without_image_obj=zh_without_image_obj, user_that_annots_it=user_obj)
@@ -102,10 +101,11 @@ def create_zh_with_image(zh, user_obj, zh_without_image_obj):
 
 # 删除已标注过的第二阶段数据
 def del_zh_with_image_and_fixinfos(user_obj, zh_without_image_obj):
-    # 先删除修正信息，再删除中文
     zh_with_image_obj = ZhWithImage.objects.get(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj)
-    FixInfo.objects.filter(zh_with_image_obj=zh_with_image_obj).delete()
-    ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
+    if zh_with_image_obj:
+        # 先删除修正信息，再删除看图片标注的中文
+        FixInfo.objects.filter(zh_with_image_obj=zh_with_image_obj).delete()
+        ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
 
 # 创建修正信息
 dic_error_choices = {

@@ -133,7 +133,7 @@ def get_first_isnot_finished_index(user_obj):
         if i.is_finished == False:
             return index + 1
 
-    return -1
+    return get_total_amount_with_image(user_obj) + 1
 
 # 得到用户第二阶段未完成任务的总数
 def get_isnot_finished_amout(user_obj):
