@@ -1,10 +1,10 @@
 from annotation.models import (
-    RandomImageID, 
-    _MAX, 
-    Caption, 
-    Image, 
-    FirstStageWorkPool, 
-    ZhWithoutImage, 
+    RandomImageID,
+    _MAX,
+    Caption,
+    Image,
+    FirstStageWorkPool,
+    ZhWithoutImage,
     SecondStageWorkPool,
     ZhWithImage,
     FixInfo,
@@ -27,14 +27,8 @@ def util_management_del(task, user_obj, num):
                 FirstStageWorkPool.objects.filter(user_obj=user_obj, index_without_image=total_amount_without_image-i).delete()
     
     else:
-        total_amount_with_image = get_total_amount_without_image(user_obj)
-        if total_amount_with_image - user_obj.now_index_with_image + 1 < num:
-            # 删除的任务量大于未标注的任务量
-            return False
-        else:
-            # 删除工作池中已分配的任务
-            for i in range(num):
-                SecondStageWorkPool.objects.filter(user_obj=user_obj, index_with_image=total_amount_with_image-i).delete()
+        # TODO
+        return False
 
     return True
 

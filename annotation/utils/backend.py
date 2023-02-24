@@ -134,3 +134,13 @@ def get_first_isnot_finished_index(user_obj):
             return index + 1
 
     return -1
+
+# 得到用户第二阶段未完成任务的总数
+def get_isnot_finished_amout(user_obj):
+    num = 0
+    t = SecondStageWorkPool.objects.filter(user_obj=user_obj).all()
+    for i in t:
+        if i.is_finished == False:
+            num += 1
+
+    return num

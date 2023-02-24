@@ -59,10 +59,10 @@ def annotation_with_image(request, index_with_image):
     
     user_obj = User.objects.get(username=request.session.get("info")['username'])
 
-    # 不可以访问超过标注总量的页面，不可以超前访问待标注的数据
-    if user_obj.total_amount_with_image < index_with_image or user_obj.now_index_with_image < index_with_image:
-        index = min(user_obj.now_index_with_image, user_obj.total_amount_with_image)
-        return redirect('/annotation_with_image/{}/'.format(index))
+    # # 不可以访问超过标注总量的页面，不可以超前访问待标注的数据
+    # if user_obj.total_amount_with_image < index_with_image or user_obj.now_index_with_image < index_with_image:
+    #     index = min(user_obj.now_index_with_image, user_obj.total_amount_with_image)
+    #     return redirect('/annotation_with_image/{}/'.format(index))
     
     # 传递到前端的参数
     zh_without_image_obj = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index_with_image).zh_without_image_obj
@@ -80,7 +80,7 @@ def annotation_with_image(request, index_with_image):
         'annotated_amount': index_with_image, # 已标注的个数
         'image_name': image_url(image_obj.image_name),
         'is_admin': user_obj.is_admin,
-        'total': user_obj.total_amount_with_image,
+        'total': get_total_amount_with_image(user_obj),
         'zh_without_image': zh_without_image_obj.zh_without_image,
         'zh': zh,
     }

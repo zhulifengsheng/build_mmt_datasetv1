@@ -32,9 +32,6 @@ class User(models.Model):
     # 不看图片标注（与caption_id对应）
     now_index_without_image = models.PositiveIntegerField(verbose_name='该标注哪个了，从1开始', default=1)
     
-    # 看图片标注（与zh_without_image_id对应）
-    now_index_with_image = models.PositiveIntegerField(verbose_name='该标注哪个了，从1开始', default=1)
-    
     is_admin = models.BooleanField(verbose_name='是否是管理员', default=False)
 
 class FirstStageWorkPool(models.Model):

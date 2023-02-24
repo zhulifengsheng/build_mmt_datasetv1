@@ -1,17 +1,16 @@
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, HttpResponse
 from annotation.models import (
-    User, 
-    Caption, 
-    FirstStageWorkPool, 
-    SecondStageWorkPool, 
-    ZhWithoutImage, 
-    ZhWithImage,
+    User,
+    Caption,
+    FirstStageWorkPool,
+    SecondStageWorkPool,
+    ZhWithoutImage,
 )
 from annotation.utils.operate_dataset import (
-    util_management_add, 
-    create_zh_without_image, 
-    util_management_del, 
+    util_management_add,
+    create_zh_without_image,
+    util_management_del,
     create_zh_with_image,
     create_fix_info,
     del_zh_with_image_and_fixinfos,
@@ -20,7 +19,9 @@ from annotation.utils.operate_dataset import (
 from annotation.utils.backend import (
     parse,
     get_total_amount_without_image,
-    get_total_amount_with_image
+    get_total_amount_with_image,
+    get_isnot_finished_amout,
+    get_first_isnot_finished_index,
 )
 
 def login(request):
@@ -96,9 +97,9 @@ def show_management_table(request):
             dic = {}
             dic['username'] = user_obj.username
             dic['first1'] = user_obj.now_index_without_image - 1
-            dic['first2']  = get_annotation_without_image(user_obj) - dic['first1']
-            dic['second1'] = user_obj.now_index_with_image - 1
-            dic['second2']  = get_annotation_with_image(user_obj) - dic['second1']
+            dic['first2']  = get_total_amount_without_image(user_obj) - dic['first1']
+            dic['second1'] = get_isnot_finished_amout(user_obj)
+            dic['second2']  = get_total_amount_with_image(user_obj) - dic['second1']
             data.append(dic)
         
         context = {
@@ -133,12 +134,12 @@ def to_annotation_with_image(request):
     if total_amount_with_image == 0:
         return HttpResponse('您还没有分配过该任务')
 
-    if user_obj.now_index_with_image > total_amount_with_image:
+    if get_isnot_finished_amout(user_obj)+1 > total_amount_with_image:
         # 任务都完成了
         return redirect('/annotation_with_image/{}/'.format(total_amount_with_image))
     else:
         # 任务还在做
-        return redirect('/annotation_with_image/{}/'.format(user_obj.now_index_with_image))
+        return redirect('/annotation_with_image/{}/'.format(get_first_isnot_finished_index(user_obj)))
 
 # 接收前端数据进行处理
 def get_annotation_without_image(request):
@@ -225,7 +226,7 @@ def get_annotation_with_image(request):
             if old_words is not None:
                 create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
 
-            if index+1 > user_obj.total_amount_with_image:
+            if index+1 > get_total_amount_with_image(user_obj):
                 # 用户已标注完全部数据
                 return JsonResponse({'annotated_amount': str(index), 'finished': True})
             else:
@@ -240,8 +241,7 @@ def get_annotation_with_image(request):
             if old_words is not None:
                 create_fix_info(old_words, old_words_pos, new_words, new_words_pos, type_list, zh_with_image_obj)
             
-            # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
-            index = min(user_obj.now_index_with_image, user_obj.total_amount_with_image)
+            # 修改过去标注过的译文时，不进行页面跳转，前端提交之后还是返回当前页面
             return JsonResponse({'annotated_amount': str(index), 'finished': False})
 
     raise Http404("非ajax访问了该api")
