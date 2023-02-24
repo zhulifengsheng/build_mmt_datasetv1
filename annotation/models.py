@@ -30,12 +30,10 @@ class User(models.Model):
     password = models.CharField(verbose_name='密码', max_length=10)
     
     # 不看图片标注（与caption_id对应）
-    now_index_without_image = models.PositiveIntegerField(verbose_name='该标注哪个了', default=1)    # 没有被分配过任务时，初始化为0
-    total_amount_without_image = models.PositiveIntegerField(verbose_name='标注的总量', default=0)
+    now_index_without_image = models.PositiveIntegerField(verbose_name='该标注哪个了，从1开始', default=1)
     
     # 看图片标注（与zh_without_image_id对应）
-    now_index_with_image = models.PositiveIntegerField(verbose_name='该标注哪个了', default=1)    # 没有被分配过任务时，初始化为0
-    total_amount_with_image = models.PositiveIntegerField(verbose_name='标注的总量', default=0)
+    now_index_with_image = models.PositiveIntegerField(verbose_name='该标注哪个了，从1开始', default=1)
     
     is_admin = models.BooleanField(verbose_name='是否是管理员', default=False)
 
@@ -43,7 +41,6 @@ class FirstStageWorkPool(models.Model):
     '''
     第一阶段工作池，根据_MAX最大标注的图片数量，这个第一阶段任务的标注数量也会是固定的
     '''
-    # 默认主键id
     # caption_obj也是独一无二的
     caption_obj = models.ForeignKey(to="Caption", to_field="caption_id", on_delete=models.CASCADE)
     user_obj = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)  # 由那个用户对该英文描述进行不看图片译文标注
@@ -58,7 +55,6 @@ class SecondStageWorkPool(models.Model):
     '''
     第一阶段工作池，根据_MAX最大标注的图片数量，这个第一阶段任务的标注数量也会是固定的
     '''
-    # 默认主键id
     # zh_without_image_obj也是独一无二的
     zh_without_image_obj = models.ForeignKey(to="ZhWithoutImage", to_field="zh_without_image_id", on_delete=models.CASCADE)
     user_obj = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)  # 由那个用户对该不看图片译文进行修正
@@ -76,6 +72,8 @@ class Caption(models.Model):
     caption_NO = models.PositiveSmallIntegerField(verbose_name='第几个描述')    # 1-7
     caption = models.TextField(verbose_name='英文描述')
     zh_machine_translation = models.TextField(verbose_name='机器翻译')
+    
+    # 在第一阶段标注的时候会对该值进行确认
     is_ambiguity = models.BooleanField(verbose_name='改英文是否歧义', default=False)
 
     # 该caption链接到那个图片
@@ -89,6 +87,7 @@ class ZhWithoutImage(models.Model):
     zh_without_image_id = models.BigAutoField(verbose_name='ZhWithoutImage ID', primary_key=True)   # 主键
     zh_without_image = models.TextField(verbose_name='不看图片标注的中文')
 
+    # 在第二阶段标注的时候会对该值进行确认
     is_the_same_meaning_as_the_image = models.BooleanField(verbose_name='这个不看图片标注的中文和图片是否是一样的意思', default=True)
 
     # 该不看图片中文链接到那个Caption

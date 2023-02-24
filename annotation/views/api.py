@@ -11,7 +11,11 @@ from annotation.utils.operate_dataset import (
     create_fix_info,
     del_zh_with_image_and_fixinfos,
 )
-from annotation.utils.backend import parse
+from annotation.utils.backend import (
+    parse,
+    get_total_amount_without_image,
+    get_total_amount_with_image
+)
 
 def login(request):
     if request.is_ajax() and request.method == 'POST':
@@ -86,9 +90,9 @@ def show_management_table(request):
             dic = {}
             dic['username'] = user_obj.username
             dic['first1'] = user_obj.now_index_without_image - 1
-            dic['first2']  = user_obj.total_amount_without_image - dic['first1']
+            dic['first2']  = get_annotation_without_image(user_obj) - dic['first1']
             dic['second1'] = user_obj.now_index_with_image - 1
-            dic['second2']  = user_obj.total_amount_with_image - dic['second1']
+            dic['second2']  = get_annotation_with_image(user_obj) - dic['second1']
             data.append(dic)
         
         context = {
@@ -99,16 +103,18 @@ def show_management_table(request):
 
     raise Http404("非ajax访问了该api")
 
-# 标注数据管理
+# 标注页面路由
 def to_annotation_without_image(request):
     # 根据用户名找到用户需要标注第几个caption
     user_obj = User.objects.get(username=request.session.get("info")['username'])
-    if user_obj.total_amount_without_image == 0:
+    total_amount_without_image = get_total_amount_without_image(user_obj)
+    
+    if total_amount_without_image == 0:
         return HttpResponse('您还没有分配过该任务')
 
-    if user_obj.now_index_without_image > user_obj.total_amount_without_image:
+    if user_obj.now_index_without_image > total_amount_without_image:
         # 任务都完成了
-        return redirect('/annotation_without_image/{}/'.format(user_obj.total_amount_without_image))
+        return redirect('/annotation_without_image/{}/'.format(total_amount_without_image))
     else:
         # 任务还在做
         return redirect('/annotation_without_image/{}/'.format(user_obj.now_index_without_image))
@@ -116,16 +122,20 @@ def to_annotation_without_image(request):
 def to_annotation_with_image(request):
     # 根据用户名找到用户需要标注第几个caption
     user_obj = User.objects.get(username=request.session.get("info")['username'])
-    if user_obj.total_amount_with_image == 0:
+    total_amount_with_image = get_total_amount_with_image(user_obj)
+    
+    if total_amount_with_image == 0:
         return HttpResponse('您还没有分配过该任务')
 
-    if user_obj.now_index_with_image > user_obj.total_amount_with_image:
+    if user_obj.now_index_with_image > total_amount_with_image:
         # 任务都完成了
-        return redirect('/annotation_with_image/{}/'.format(user_obj.total_amount_with_image))
+        return redirect('/annotation_with_image/{}/'.format(total_amount_with_image))
     else:
         # 任务还在做
         return redirect('/annotation_with_image/{}/'.format(user_obj.now_index_with_image))
 
+# 接收前端数据进行处理
+# TODO
 def get_annotation_without_image(request):
     if request.is_ajax() and request.method == 'POST':
         user_obj = User.objects.get(username=request.session.get("info")['username'])
@@ -140,6 +150,8 @@ def get_annotation_without_image(request):
         # 通过标注任务，找到用户标注的caption
         caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
         
+        # 更新Caption是否有歧义
+
         if user_obj.now_index_without_image == index:
             # 标注的是新的数据
 
@@ -189,6 +201,7 @@ def get_annotation_without_image(request):
 
     raise Http404("非ajax访问了该api")
 
+# TODO
 def get_annotation_with_image(request):
     if request.is_ajax() and request.method == 'POST':
         user_obj = User.objects.get(username=request.session.get("info")['username'])

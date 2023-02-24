@@ -1,5 +1,5 @@
 import os, re
-from annotation.models import SecondStageWorkPool
+from annotation.models import SecondStageWorkPool, FirstStageWorkPool
 
 # 根据找到的修正信息进行HTML渲染
 dic_error_indexs = {
@@ -112,10 +112,19 @@ def parse(zh):
 
     return old_words, old_words_pos, new_words, new_words_pos, type_list, zh
 
+# 将图片名字转换为url路径
 def image_url(image_name):
     path_list = ['img', 'coco']
     path_list.extend(image_name.split('_'))
     return os.path.join(*path_list)
+
+# 得到用户的不看图片标注任务总量
+def get_total_amount_without_image(user_obj):
+    return len(FirstStageWorkPool.objects.filter(user_obj=user_obj).all())
+
+# 得到用户的看图片标注任务总量
+def get_total_amount_with_image(user_obj):
+    return len(SecondStageWorkPool.objects.filter(user_obj=user_obj).all())
 
 # 第一阶段的标注修改之后，用户的第二阶段标注数据也需要修改，所以需要更新用户的第二阶段now_index
 def update_user_now_index(user_obj):
