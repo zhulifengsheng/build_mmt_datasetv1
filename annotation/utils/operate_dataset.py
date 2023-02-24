@@ -41,8 +41,9 @@ def util_management_add(username, task, user_obj, num):
             image_id = RandomImageID.objects.get(Random_imageID_id=i).image_id
             image_obj = Image.objects.get(image_id=image_id)
             caption_obj = Caption.objects.get(image_obj=image_obj, caption_NO=1)
+            
             if FirstStageWorkPool.objects.filter(caption_obj=caption_obj).exists():
-                # 该描述已分配到某用户的任务中
+                # 该看图片译文已分配到某用户的任务中
                 continue
             else:
                 t += 1
@@ -50,8 +51,9 @@ def util_management_add(username, task, user_obj, num):
                 if t == num:
                     # 任务分配完毕
                     break
-        
+        # 更新总任务量
         User.objects.filter(username=username).update(total_amount_without_image=user_obj.total_amount_without_image+t)
+    
     else:
         # 给用户添加第二阶段的任务
         t = 0 # 记录成功分配的个数
@@ -69,8 +71,9 @@ def util_management_add(username, task, user_obj, num):
                 if t == num:
                     # 任务分配完毕
                     break
-            
+        # 更新总任务量
         User.objects.filter(username=username).update(total_amount_with_image=user_obj.total_amount_with_image+t)  
+    
     return t
 
 # 创建第一阶段数据
@@ -78,21 +81,21 @@ def create_zh_without_image(zh, caption_obj, user_obj):
     ZhWithoutImage.objects.create(zh_without_image=zh, caption_obj=caption_obj, user_that_annots_it=user_obj)
 
 # 更新已标注过的第一阶段数据
-def update_zh_without_image(zh, caption_obj, user_obj):
+def update_zh_without_image(zh, caption_obj, user_obj, index):
     '''
         说明：对不看图片标注的译文来说，更新的同时还需要对其链接的看图片标注进行删除
     '''
     # 先通过 caption_obj 和 user_obj 找到数据，然后进行修改
     zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
     
-    id = zhs[0].zh_without_image_id
+    id = zhs[index].zh_without_image_id
     ZhWithoutImage.objects.filter(zh_without_image_id=id).update(zh_without_image=zh)
-    zh_without_image_obj = ZhWithoutImage.objects.get(zh_without_image_id=id)
     
     # 找到其链接的看图片标注中文，并将其删除
+    zh_without_image_obj = ZhWithoutImage.objects.get(zh_without_image_id=id)
     ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
 
-# 删除已标注过的第一阶段数据
+# 删除已标注过的第一阶段数据（只会对第二个标注的中文进行删除操作）
 def del_zh_without_image(caption_obj, user_obj):
     '''
         说明：如果第二个标注存在则删除它，若不存在则不执行

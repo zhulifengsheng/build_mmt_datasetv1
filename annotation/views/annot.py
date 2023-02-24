@@ -19,7 +19,7 @@ def annotation_without_image(request, index_without_image):
         return redirect('/annotation_without_image/{}/'.format(index))
     
     # 传递到前端的参数
-    caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj.username, index_without_image=index_without_image).caption_obj
+    caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index_without_image).caption_obj
     qiyi = False
     zh1, zh2 = caption_obj.zh_machine_translation, ''   # 找到之前标注过的中文
     zhwithoutimage = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')

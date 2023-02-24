@@ -1,4 +1,5 @@
 import os, re
+from annotation.models import SecondStageWorkPool
 
 # 根据找到的修正信息进行HTML渲染
 dic_error_indexs = {
@@ -115,3 +116,9 @@ def image_url(image_name):
     path_list = ['img', 'coco']
     path_list.extend(image_name.split('_'))
     return os.path.join(*path_list)
+
+# 第一阶段的标注修改之后，用户的第二阶段标注数据也需要修改，所以需要更新用户的第二阶段now_index
+def update_user_now_index(user_obj):
+    SecondStageWorkPool.objects.filter(user_obj=user_obj)
+
+    return 1

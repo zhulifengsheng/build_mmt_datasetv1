@@ -1,6 +1,6 @@
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, HttpResponse
-from annotation.models import User, Caption, FirstStageWorkPool, SecondStageWorkPool
+from annotation.models import User, Caption, FirstStageWorkPool, SecondStageWorkPool, ZhWithoutImage
 from annotation.utils.operate_dataset import (
     util_management_add, 
     create_zh_without_image, 
@@ -99,6 +99,7 @@ def show_management_table(request):
 
     raise Http404("非ajax访问了该api")
 
+# 标注数据管理
 def to_annotation_without_image(request):
     # 根据用户名找到用户需要标注第几个caption
     user_obj = User.objects.get(username=request.session.get("info")['username'])
@@ -136,12 +137,16 @@ def get_annotation_without_image(request):
         zh2 = request.POST.get('zh2')
         assert zh1 != '', '标注的第一个译文不能为空'
 
-        # 通过标注任务，找到用户的标注caption
+        # 通过标注任务，找到用户标注的caption
         caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
         
         if user_obj.now_index_without_image == index:
             # 标注的是新的数据
+
+            # 更新当前标注索引
             User.objects.filter(username=username).update(now_index_without_image=index+1)
+            
+            # 创建不看图片标注的译文
             create_zh_without_image(zh1, caption_obj, user_obj)
             if zh2 != '':
                 create_zh_without_image(zh2, caption_obj, user_obj)
@@ -155,17 +160,26 @@ def get_annotation_without_image(request):
             # 标注的是已标注过的数据
 
             # 更新第一个标注的不看图片译文
-            update_zh_without_image(zh1, caption_obj, user_obj)
+            update_zh_without_image(zh1, caption_obj, user_obj, 0)
             
             # 更新第二个标注的不看图片译文
             if zh2 == '':
                 # 当第二个标注为空时，仅删除掉这第二个标注即可
                 del_zh_without_image(caption_obj, user_obj)
             else:
-                # 当第二个标注不为空时，则先删除再添加
-                del_zh_without_image(caption_obj, user_obj)
-                create_zh_without_image(zh2, caption_obj, user_obj)
+                # 更新第二个标注的不看图片译文
+                update_zh_without_image(zh2, caption_obj, user_obj, 1)
             
+            # 第一阶段的标注修改之后，用户的第二阶段标注数据也需要修改，所以需要更新用户的第二阶段now_index
+            
+            # 找到当前修改的是那个不看图片中文
+            caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
+            zhwithoutimage = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
+            SecondStageWorkPool.objects.filter(user_obj=user_obj, index_with_image=1).update(is_finished=False)
+            # TODO
+            # SecondStageWorkPool.objects.filter(user_obj=user_obj, index_with_image=1).update(is_finished=False)
+            # User.objects.filter(username=username).upadte(now_index_with_image=1)
+
             # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
             index = min(user_obj.now_index_without_image, user_obj.total_amount_without_image)
             return JsonResponse({'annotated_amount': str(index), 'finished': False})
