@@ -84,16 +84,32 @@ def create_zh_without_image(zh, caption_obj, user_obj):
 def update_zh_without_image(zh, caption_obj, user_obj, index):
     '''
         说明：对不看图片标注的译文来说，更新的同时还需要对其链接的看图片标注进行删除
+        return: 一个布尔值，False表示没有更新看图片的中文；True表示更新了看图片的中文
     '''
     # 先通过 caption_obj 和 user_obj 找到数据，然后进行修改
     zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
     
-    id = zhs[index].zh_without_image_id
-    ZhWithoutImage.objects.filter(zh_without_image_id=id).update(zh_without_image=zh)
+    if len(zhs) == 1 and index == 1:
+        # 之前没有标注第二个翻译，现在才标注第二个翻译
+        create_zh_without_image(zh, caption_obj, user_obj)
+        return False
+
+    # 之前的中文和当前的中文不相同时，才会进行更新操作
+    if zhs[index].zh_without_image != zh:
+        id = zhs[index].zh_without_image_id
+        ZhWithoutImage.objects.filter(zh_without_image_id=id).update(zh_without_image=zh)
     
-    # 找到其链接的看图片标注中文，并将其删除
-    zh_without_image_obj = ZhWithoutImage.objects.get(zh_without_image_id=id)
-    ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
+        # 找到其链接的看图片标注中文，并将其删除
+        zh_without_image_obj = ZhWithoutImage.objects.get(zh_without_image_id=id)
+        t = ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj)
+        
+        # 如果存在级联的第二阶段标注数据，则将其删除
+        if t.exists():
+            t.delete()
+            return True
+        return False
+
+    return False
 
 # 删除已标注过的第一阶段数据（只会对第二个标注的中文进行删除操作）
 def del_zh_without_image(caption_obj, user_obj):
@@ -105,6 +121,7 @@ def del_zh_without_image(caption_obj, user_obj):
         id = zhs[1].zh_without_image_id
         ZhWithoutImage.objects.filter(zh_without_image_id=id).delete()
 
+'''TODO'''
 # 创建第二阶段数据
 def create_zh_with_image(zh, user_obj, zh_without_image_obj):
     ZhWithImage.objects.create(zh_with_image=zh, zh_without_image_obj=zh_without_image_obj, user_that_annots_it=user_obj)

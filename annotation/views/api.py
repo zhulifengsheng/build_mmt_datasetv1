@@ -5,7 +5,7 @@ from annotation.utils.operate_dataset import (
     util_management_add, 
     create_zh_without_image, 
     update_zh_without_image, 
-    del_zh_without_image, 
+    del_zh_without_image,
     util_management_del, 
     create_zh_with_image,
     create_fix_info,
@@ -159,19 +159,22 @@ def get_annotation_without_image(request):
         else:
             # 标注的是已标注过的数据
 
+            flag_is_delete_second_zh = []
             # 更新第一个标注的不看图片译文
-            update_zh_without_image(zh1, caption_obj, user_obj, 0)
+            flag_is_delete_second_zh.append(update_zh_without_image(zh1, caption_obj, user_obj, 0))
             
             # 更新第二个标注的不看图片译文
             if zh2 == '':
                 # 当第二个标注为空时，仅删除掉这第二个标注即可
                 del_zh_without_image(caption_obj, user_obj)
+                # TODO 更新total_index
             else:
                 # 更新第二个标注的不看图片译文
-                update_zh_without_image(zh2, caption_obj, user_obj, 1)
+                flag_is_delete_second_zh.append(update_zh_without_image(zh2, caption_obj, user_obj, 1))
             
             # 第一阶段的标注修改之后，用户的第二阶段标注数据也需要修改，所以需要更新用户的第二阶段now_index
-            
+            print(flag_is_delete_second_zh)
+
             # 找到当前修改的是那个不看图片中文
             caption_obj = FirstStageWorkPool.objects.get(user_obj=user_obj, index_without_image=index).caption_obj
             zhwithoutimage = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')

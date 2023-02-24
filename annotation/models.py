@@ -44,10 +44,11 @@ class FirstStageWorkPool(models.Model):
     第一阶段工作池，根据_MAX最大标注的图片数量，这个第一阶段任务的标注数量也会是固定的
     '''
     # 默认主键id
+    # caption_obj也是独一无二的
     caption_obj = models.ForeignKey(to="Caption", to_field="caption_id", on_delete=models.CASCADE)
     user_obj = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)  # 由那个用户对该英文描述进行不看图片译文标注
     index_without_image = models.PositiveIntegerField(verbose_name='当前用户的第几个标注数据')
-    
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['user_obj', 'index_without_image'], name="indexwithoutimage_of_the_user"),
@@ -58,6 +59,7 @@ class SecondStageWorkPool(models.Model):
     第一阶段工作池，根据_MAX最大标注的图片数量，这个第一阶段任务的标注数量也会是固定的
     '''
     # 默认主键id
+    # zh_without_image_obj也是独一无二的
     zh_without_image_obj = models.ForeignKey(to="ZhWithoutImage", to_field="zh_without_image_id", on_delete=models.CASCADE)
     user_obj = models.ForeignKey(to="User", to_field="username", on_delete=models.SET_NULL, null=True)  # 由那个用户对该不看图片译文进行修正
     index_with_image = models.PositiveIntegerField(verbose_name='当前用户的第几个标注数据')
