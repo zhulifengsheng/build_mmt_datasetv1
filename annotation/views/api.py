@@ -153,12 +153,19 @@ def get_annotation_without_image(request):
                 return JsonResponse({'annotated_amount': str(index+1), 'finished': False})
         else:
             # 标注的是已标注过的数据
-            update_zh_without_image(zh1, caption_obj, user_obj, 0)
+
+            # 更新第一个标注的不看图片译文
+            update_zh_without_image(zh1, caption_obj, user_obj)
+            
+            # 更新第二个标注的不看图片译文
             if zh2 == '':
+                # 当第二个标注为空时，仅删除掉这第二个标注即可
                 del_zh_without_image(caption_obj, user_obj)
             else:
-                update_zh_without_image(zh2, caption_obj, user_obj, 1)
-
+                # 当第二个标注不为空时，则先删除再添加
+                del_zh_without_image(caption_obj, user_obj)
+                create_zh_without_image(zh2, caption_obj, user_obj)
+            
             # 跳转到待标注的页面，或最后一个标注的页面（标注任务都完成时）
             index = min(user_obj.now_index_without_image, user_obj.total_amount_without_image)
             return JsonResponse({'annotated_amount': str(index), 'finished': False})

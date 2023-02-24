@@ -16,8 +16,12 @@ MYSQL 5.7
 		mysqldump -uroot -p --default-character-set=utf8 mmt_databasev1 > data.sql
 
 	5. Linux服务器查看mysql状态
-	systemctl status mysqld.service
+		systemctl status mysqld.service
 
 Git
 	1. git config --global http.proxy http://127.0.0.1:7890
 	2. git config --global --unset http.proxy
+
+部署
+	1. 在阿里云安全组添加8000端口号
+	2. python3 manage.py runserver 0.0.0.0:8000

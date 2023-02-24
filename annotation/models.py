@@ -83,6 +83,8 @@ class ZhWithoutImage(models.Model):
     zh_without_image_id = models.BigAutoField(verbose_name='ZhWithoutImage ID', primary_key=True)   # 主键
     zh_without_image = models.TextField(verbose_name='不看图片标注的中文')
 
+    is_the_same_meaning_as_the_image = models.BooleanField(verbose_name='这个不看图片标注的中文和图片是否是一样的意思', default=True)
+
     # 该不看图片中文链接到那个Caption
     caption_obj = models.ForeignKey(to="Caption", to_field="caption_id", on_delete=models.CASCADE)
     # 谁标注的这个不看图片中文

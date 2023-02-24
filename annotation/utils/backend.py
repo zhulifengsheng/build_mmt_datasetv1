@@ -20,8 +20,7 @@ dic_error_indexs = {
     4: '数量',
     5: '细化',
 }
-
-def _tohtml(old_word, new_word, error_kind):    # 转换为HTML代码的函数
+def _tohtml(old_word, new_word, error_kind):    
     if error_kind == '名词':
         tohtml = '<span style="background-color:HotPink; margin: 0px 1px;" title=名词：' + old_word + '>' + new_word + '</span>';
     elif error_kind == '动词':
@@ -35,6 +34,7 @@ def _tohtml(old_word, new_word, error_kind):    # 转换为HTML代码的函数
 
     return tohtml
 
+# 将看图片标注的中文转换为HTML代码
 def html_zh(zh, fix_infos):
     old_words = [i.word_before_change for i in fix_infos]
     new_words = [i.word_after_change for i in fix_infos]
@@ -195,23 +195,25 @@ def create_zh_without_image(zh, caption_obj, user_obj):
     ZhWithoutImage.objects.create(zh_without_image=zh, caption_obj=caption_obj, user_that_annots_it=user_obj)
 
 # 更新已标注过的第一阶段数据
-def update_zh_without_image(zh, caption_obj, user_obj, index):
+def update_zh_without_image(zh, caption_obj, user_obj):
     '''
-        index: 0 or 1 表示对第几个译文进行修改
+        说明：对不看图片标注的译文来说，更新的同时还需要对其链接的看图片标注进行删除
     '''
     # 先通过 caption_obj 和 user_obj 找到数据，然后进行修改
     zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
     
-    if len(zhs) == 1 and index == 1:
-        # 之前没有标注第二个翻译，现在才标注第二个翻译
-        create_zh_without_image(zh, caption_obj, user_obj)
-    else:
-        id = zhs[index].zh_without_image_id
-        ZhWithoutImage.objects.filter(zh_without_image_id=id).update(zh_without_image=zh)
+    id = zhs[0].zh_without_image_id
+    ZhWithoutImage.objects.filter(zh_without_image_id=id).update(zh_without_image=zh)
+    zh_without_image_obj = ZhWithoutImage.objects.get(zh_without_image_id=id)
+    
+    # 找到其链接的看图片标注中文，并将其删除
+    ZhWithImage.objects.filter(user_that_annots_it=user_obj, zh_without_image_obj=zh_without_image_obj).delete()
 
 # 删除已标注过的第一阶段数据
 def del_zh_without_image(caption_obj, user_obj):
-    # 若存在则删除
+    '''
+        说明：如果第二个标注存在则删除它，若不存在则不执行
+    '''
     zhs = ZhWithoutImage.objects.filter(caption_obj=caption_obj, user_that_annots_it=user_obj).order_by('zh_without_image_id')
     if len(zhs) != 1:
         id = zhs[1].zh_without_image_id
