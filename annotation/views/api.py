@@ -1,17 +1,17 @@
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, HttpResponse
 from annotation.models import User, Caption, FirstStageWorkPool, SecondStageWorkPool
-from annotation.utils.backend import (
+from annotation.utils.operate_dataset import (
     util_management_add, 
     create_zh_without_image, 
     update_zh_without_image, 
     del_zh_without_image, 
     util_management_del, 
-    parse,
     create_zh_with_image,
     create_fix_info,
     del_zh_with_image_and_fixinfos,
 )
+from annotation.utils.backend import parse
 
 def login(request):
     if request.is_ajax() and request.method == 'POST':
