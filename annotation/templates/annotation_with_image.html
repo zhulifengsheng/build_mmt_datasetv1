@@ -447,6 +447,7 @@
     $('#save_fix').on('click', function () {
       document.getElementById('old_zh').innerHTML = document.getElementById('zh').innerHTML;
       $('#submit_zh').removeClass("layui-btn-disabled");
+      $('#save_fix').addClass("layui-btn-disabled");
       return false; // 禁止刷新页面
     });
 
