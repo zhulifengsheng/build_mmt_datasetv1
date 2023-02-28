@@ -17,7 +17,8 @@ from annotation.utils.operate_dataset import (
     update_zh_without_image,
 )
 from annotation.utils.backend import (
-    parse,
+    parse_oldzh,
+    parse_newzh,
     get_total_amount_without_image,
     get_total_amount_with_image,
     get_isnot_finished_amout,
@@ -211,6 +212,8 @@ def get_annotation_with_image(request):
         # 保存前端标注的不看图片标注数据
         index = int(request.POST.get('index'))  # index表示用户的第几个标注任务
         zh = request.POST.get('zh')
+        old_zh = request.POST.get('old_zh')
+        assert old_zh != ''
         assert zh != '', '标注的译文不能为空'
         
         # 通过标注任务，找到用户的标注那个zh_without_image
@@ -218,7 +221,7 @@ def get_annotation_with_image(request):
         zh_without_image_obj = sswp.zh_without_image_obj
 
         # 解析中文中的HTML标签
-        old_words, old_words_pos, new_words, new_words_pos, type_list, zh = parse(zh, zh_without_image_obj.zh_without_image)
+        old_words, old_words_pos, new_words, new_words_pos, type_list, zh = parse_newzh(zh, parse_oldzh(old_zh))
 
         # 该数据已标注完了，修改标注记录
         sswp.is_finished = True

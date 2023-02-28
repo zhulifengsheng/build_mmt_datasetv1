@@ -69,7 +69,7 @@
             </div>
           </div>
 
-          <!-- 显示划中单词 -->
+          <!-- 显示划中单词，进行修正 -->
           <div class="layui-input-block"
             style="text-align: center; margin-left: 0px; margin-top: 40px; margin-bottom: 0px;">
             <!-- 显示区 -->
@@ -96,7 +96,7 @@
             <input id="fix_input" type="text" placeholder="请输入修正后的词" class="layui-input"
               style="display: inline; width: 200px; height: 40px;">
 
-            <!-- 保存按钮 -->
+            <!-- 保存和删除按钮 -->
             <div style="margin-left: 5%; display: inline; vertical-align: bottom;">
               <button type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
                 onclick="fix_addlabel()">保存修正</button>
@@ -123,16 +123,19 @@
         </div>
 
         <div class="layui-col-md3">
-          <!-- 提交按钮 -->
+          <!-- 保存修正按钮 -->
           <div class="layui-form-item" style="text-align: center; margin-top: 40px;">
-            <button class="layui-btn" lay-filter="demo1">提交修正</button>
+            <button id="save_fix" class="layui-btn">保存修正</button>
           </div>
-          <!-- 重置按钮 -->
+          <!-- 提交译文按钮 -->
           <div class="layui-form-item" style="text-align: center;">
-            <button id="submit" type="submit" class="layui-btn" lay-submit="" lay-filter="demo2" disabled>提交译文</button>
+            <button id="submit_zh" type="submit" class="layui-btn" lay-submit="" lay-filter="demo2" disabled>提交译文</button>
           </div>
         </div>
       </div>
+
+      <!-- 隐藏的输入，单纯修正之后的译文 -->
+      <p id="old_zh" hidden>{{ zh }}</p>
 
     </form>
   </div>
@@ -163,37 +166,13 @@
         }
       });
 
-      //提交事件
-      form.on('submit(demo1)', function (data) {
-        $.ajax({
-          url: "/api/get_annotation_with_image/",
-          data: {
-            'index': '{{ annotated_amount }}',
-            'zh': document.getElementById('zh').innerHTML,
-          },  // 数据字典
-          async: true,
-          cache: false,
-          type: "POST",
-          dataType: "json",
-          success: function (result) {
-            if (result['finished']) {
-              layer.msg('修正信息已保存！', { icon: 1 });
-              $('#submit').removeAttr("disabled");
-            }
-            else {
-              layer.msg('修正信息保存失败！', { icon: 2 });
-            }
-          }
-        }); //ajax结束
-        return false;
-      });
-
       form.on('submit(demo2)', function (data) {
         $.ajax({
           url: "/api/get_annotation_with_image/",
           data: {
             'index': '{{ annotated_amount }}',
             'zh': document.getElementById('zh').innerHTML,
+            'old_zh': document.getElementById('old_zh').innerHTML,
           },  // 数据字典
           async: true,
           cache: false,
@@ -463,6 +442,13 @@
       }
       return old_word;
     }
+
+    // 保存修正按钮
+    $('#save_fix').on('click', function () {
+      document.getElementById('old_zh').innerHTML = document.getElementById('zh').innerHTML;
+      $('#submit_zh').removeAttr('disabled');
+      return false; // 禁止刷新页面
+    });
 
   </script>
 
