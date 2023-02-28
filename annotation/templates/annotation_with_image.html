@@ -99,7 +99,7 @@
             <!-- 保存和删除按钮 -->
             <div style="margin-left: 5%; display: inline; vertical-align: bottom;">
               <button type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
-                onclick="fix_addlabel()">保存修正</button>
+                onclick="fix_addlabel()">添加修正</button>
               <button type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
                 onclick="fix_dellabel()">删除修正</button>
             </div>
@@ -123,13 +123,13 @@
         </div>
 
         <div class="layui-col-md3">
-          <!-- 保存修正按钮 -->
+          <!-- 修正结束按钮 -->
           <div class="layui-form-item" style="text-align: center; margin-top: 40px;">
-            <button id="save_fix" class="layui-btn">保存修正</button>
+            <button id="save_fix" class="layui-btn">修正结束</button>
           </div>
           <!-- 提交译文按钮 -->
           <div class="layui-form-item" style="text-align: center;">
-            <button id="submit_zh" type="submit" class="layui-btn" lay-submit="" lay-filter="demo2" disabled>提交译文</button>
+            <button id="submit_zh" type="submit" class="layui-btn layui-btn-disabled" lay-submit="" lay-filter="demo2">提交译文</button>
           </div>
         </div>
       </div>
@@ -446,7 +446,7 @@
     // 保存修正按钮
     $('#save_fix').on('click', function () {
       document.getElementById('old_zh').innerHTML = document.getElementById('zh').innerHTML;
-      $('#submit_zh').removeAttr('disabled');
+      $('#submit_zh').removeClass("layui-btn-disabled");
       return false; // 禁止刷新页面
     });
 
