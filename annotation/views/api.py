@@ -213,12 +213,12 @@ def get_annotation_with_image(request):
         zh = request.POST.get('zh')
         assert zh != '', '标注的译文不能为空'
         
-        # 解析中文中的HTML标签
-        old_words, old_words_pos, new_words, new_words_pos, type_list, zh = parse(zh)
-        
         # 通过标注任务，找到用户的标注那个zh_without_image
         sswp = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index)
         zh_without_image_obj = sswp.zh_without_image_obj
+
+        # 解析中文中的HTML标签
+        old_words, old_words_pos, new_words, new_words_pos, type_list, zh = parse(zh, zh_without_image_obj.zh_without_image)
 
         # 该数据已标注完了，修改标注记录
         sswp.is_finished = True

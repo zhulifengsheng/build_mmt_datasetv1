@@ -49,7 +49,7 @@ def html_zh(zh, fix_infos):
     return new_zh
 
 # 解析看图片标注的中文HTML代码
-def parse(zh):
+def parse(zh, zh_without_image):
     '''
         return: old_words：修正之前单词的列表
                 old_words_pos：修正之前单词在旧中文中的位置，元素是元组，表示开始和结束位置（左闭右开区间）
@@ -62,6 +62,7 @@ def parse(zh):
         # 无修正直接返回即可
         return None, None, None, None, None, zh
 
+    # 得到old_words和type_list
     tmp1 = [i.end() for i in re.finditer('title="', zh)]
     tmp2 = [i.start() for i in re.finditer('">', zh)]
     assert len(tmp1) == len(tmp2)
@@ -77,6 +78,7 @@ def parse(zh):
     tmp2 = [i.start() for i in re.finditer('</span>', zh)]
     assert len(tmp1) == len(tmp2)
 
+    # 得到new_words
     new_words = []
     for i,j in zip(tmp1, tmp2):
         new_words.append(zh[i:j])
@@ -84,18 +86,16 @@ def parse(zh):
     x = re.split(r'<span.*?</span>', zh)
     assert len(old_words) == len(new_words) == len(type_list) == len(x)-1
     
+    # TODO 选择了不看图片中文中的第一个匹配的旧单词的索引
+    # 得到old_words_pos
     old_words_pos = []
-    # 计算修正前单词在旧中文中的位置
-    index = 0
-    t = len(x[index])
-    for i in old_words:
-        l = len(i)
+    for old_word in old_words:
+        t = zh_without_image.find(old_word)
+        l = len(old_word)
         old_words_pos.append((t, t+l))
-        index += 1
-        t += l + len(x[index])
         
+    # 得到new_words_pos
     new_words_pos = []
-    # 计算修正后单词在新中文中的位置
     index = 0
     t = len(x[index])
     for i in new_words:
@@ -107,9 +107,9 @@ def parse(zh):
     assert len(old_words) == len(old_words_pos) == len(new_words_pos)
 
     # 得到修正之后的中文
-    for i in new_words:
-        zh = re.sub(r'<span(.*?)</span>', i, zh, 1)
-
+    for new_word in new_words:
+        zh = re.sub(r'<span(.*?)</span>', new_word, zh, 1)
+    print(old_words, old_words_pos, new_words, new_words_pos, type_list)
     return old_words, old_words_pos, new_words, new_words_pos, type_list, zh
 
 # 将图片名字转换为url路径

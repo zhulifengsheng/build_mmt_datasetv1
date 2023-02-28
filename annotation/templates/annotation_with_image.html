@@ -125,11 +125,11 @@
         <div class="layui-col-md3">
           <!-- 提交按钮 -->
           <div class="layui-form-item" style="text-align: center; margin-top: 40px;">
-            <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo2">提交</button>
+            <button class="layui-btn" lay-filter="demo1">提交修正</button>
           </div>
           <!-- 重置按钮 -->
           <div class="layui-form-item" style="text-align: center;">
-            <button id="reset" class="layui-btn layui-btn-primary">重置</button>
+            <button id="submit" type="submit" class="layui-btn" lay-submit="" lay-filter="demo2" disabled>提交译文</button>
           </div>
         </div>
       </div>
@@ -164,6 +164,30 @@
       });
 
       //提交事件
+      form.on('submit(demo1)', function (data) {
+        $.ajax({
+          url: "/api/get_annotation_with_image/",
+          data: {
+            'index': '{{ annotated_amount }}',
+            'zh': document.getElementById('zh').innerHTML,
+          },  // 数据字典
+          async: true,
+          cache: false,
+          type: "POST",
+          dataType: "json",
+          success: function (result) {
+            if (result['finished']) {
+              layer.msg('修正信息已保存！', { icon: 1 });
+              $('#submit').removeAttr("disabled");
+            }
+            else {
+              layer.msg('修正信息保存失败！', { icon: 2 });
+            }
+          }
+        }); //ajax结束
+        return false;
+      });
+
       form.on('submit(demo2)', function (data) {
         $.ajax({
           url: "/api/get_annotation_with_image/",
@@ -210,6 +234,7 @@
   </script>
 
   <script type="text/javascript">
+    // HTML代码转换
     function decodeHtml(s) {
       var HTML_DECODE = {
         "&lt;": "<",
@@ -264,12 +289,6 @@
       // 渲染后端传递给前端的中文
       document.getElementById('zh').innerHTML = $('#zh').text();
     }
-
-    // 重置按钮
-    $('#reset').on('click', function () {
-      document.getElementById('zh').innerHTML = '{{ zh_without_image }}';
-      return false; // 禁止刷新页面
-    });
 
     // 得到划词区域
     function getText() {
