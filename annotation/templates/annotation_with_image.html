@@ -125,11 +125,19 @@
         <div class="layui-col-md3">
           <!-- 修正结束按钮 -->
           <div class="layui-form-item" style="text-align: center; margin-top: 40px;">
-            <button id="save_fix" class="layui-btn">修正结束</button>
+            {% if annoted_flag %}
+              <button id="save_fix" class="layui-btn layui-btn-disabled">修正结束</button>
+            {% else %}
+              <button id="save_fix" class="layui-btn">修正结束</button>
+            {% endif %}
           </div>
           <!-- 提交译文按钮 -->
           <div class="layui-form-item" style="text-align: center;">
-            <button id="submit_zh" type="submit" class="layui-btn layui-btn-disabled" lay-submit="" lay-filter="demo2">提交译文</button>
+            {% if annoted_flag %}
+              <button id="submit_zh" type="submit" class="layui-btn" lay-submit="" lay-filter="demo2">提交译文</button>
+            {% else %}
+              <button id="submit_zh" type="submit" class="layui-btn layui-btn-disabled" lay-submit="" lay-filter="demo2">提交译文</button>
+            {% endif %}
           </div>
         </div>
       </div>

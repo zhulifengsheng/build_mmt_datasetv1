@@ -67,12 +67,14 @@ def annotation_with_image(request, index_with_image):
         return redirect('/annotation_with_image/{}/'.format(index))
     
     # 传递到前端的参数
+    annoted_flag = False
     zh_without_image_obj = SecondStageWorkPool.objects.get(user_obj=user_obj, index_with_image=index_with_image).zh_without_image_obj
     image_obj = zh_without_image_obj.caption_obj.image_obj
 
     zh = zh_without_image_obj.zh_without_image
     zh_with_image_obj = ZhWithImage.objects.filter(zh_without_image_obj=zh_without_image_obj, user_that_annots_it=user_obj)
     if zh_with_image_obj.exists():
+        annoted_flag = True
         zh = zh_with_image_obj.first().zh_with_image
         # 找到修正信息，并进行HTML渲染
         fix_infos = FixInfo.objects.filter(zh_with_image_obj=zh_with_image_obj.first())
@@ -85,5 +87,6 @@ def annotation_with_image(request, index_with_image):
         'total': get_total_amount_with_image(user_obj),
         'zh_without_image': zh_without_image_obj.zh_without_image,
         'zh': zh,
+        'annoted_flag': annoted_flag,
     }
     return render(request, 'annotation_with_image.html', res)
