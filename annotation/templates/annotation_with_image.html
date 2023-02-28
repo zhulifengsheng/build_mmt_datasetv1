@@ -180,7 +180,7 @@
           data: {
             'index': '{{ annotated_amount }}',
             'zh': document.getElementById('zh').innerHTML,
-            'old_zh': document.getElementById('old_zh').innerHTML,
+            'old_zh': decodeHtml(document.getElementById('old_zh').innerHTML),
           },  // 数据字典
           async: true,
           cache: false,
@@ -338,19 +338,19 @@
       var tohtml; // 加<span>后的HTML代码
       switch (options.val()) {
         case '0':
-          tohtml = '<span style="background-color:HotPink; margin: 0px 1px;" title=名词：' + _p + '>' + _input + '</span>';
+          tohtml = '<span style="background-color:HotPink; margin: 0px 1px;" title="名词：' + _p + '">' + _input + '</span>';
           break;
         case '1':
-          tohtml = '<span style="background-color:Tomato; margin: 0px 1px;" title=动词：' + _p + '>' + _input + '</span>';
+          tohtml = '<span style="background-color:Tomato; margin: 0px 1px;" title="动词：' + _p + '">' + _input + '</span>';
           break;
         case '2':
-          tohtml = '<span style="background-color:DeepSkyBlue; margin: 0px 1px;" title=形容词：' + _p + '>' + _input + '</span>';
+          tohtml = '<span style="background-color:DeepSkyBlue; margin: 0px 1px;" title="形容词：' + _p + '">' + _input + '</span>';
           break;
         case '3':
-          tohtml = '<span style="background-color:PaleGreen; margin: 0px 1px;" title=数量：' + _p + '>' + _input + '</span>';
+          tohtml = '<span style="background-color:PaleGreen; margin: 0px 1px;" title="数量：' + _p + '">' + _input + '</span>';
           break;
         case '4':
-          tohtml = '<span style="background-color:MediumOrchid; margin: 0px 1px;" title=细化：' + _p + '>' + _input + '</span>';
+          tohtml = '<span style="background-color:MediumOrchid; margin: 0px 1px;" title="细化：' + _p + '">' + _input + '</span>';
           break;
       }
 

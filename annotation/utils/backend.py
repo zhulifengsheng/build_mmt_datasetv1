@@ -11,15 +11,15 @@ dic_error_indexs = {
 }
 def _tohtml(old_word, new_word, error_kind):    
     if error_kind == '名词':
-        tohtml = '<span style="background-color:HotPink; margin: 0px 1px;" title=名词：' + old_word + '>' + new_word + '</span>';
+        tohtml = '<span style="background-color:HotPink; margin: 0px 1px;" title="名词：' + old_word + '">' + new_word + '</span>';
     elif error_kind == '动词':
-        tohtml = '<span style="background-color:Tomato; margin: 0px 1px;" title=动词：' + old_word + '>' + new_word + '</span>';
+        tohtml = '<span style="background-color:Tomato; margin: 0px 1px;" title="动词：' + old_word + '">' + new_word + '</span>';
     elif error_kind == '形容词':
-        tohtml = '<span style="background-color:DeepSkyBlue; margin: 0px 1px;" title=形容词：' + old_word + '>' + new_word + '</span>';
+        tohtml = '<span style="background-color:DeepSkyBlue; margin: 0px 1px;" title="形容词：' + old_word + '">' + new_word + '</span>';
     elif error_kind == '数量':
-        tohtml = '<span style="background-color:PaleGreen; margin: 0px 1px;" title=数量：' + old_word + '>' + new_word + '</span>';
+        tohtml = '<span style="background-color:PaleGreen; margin: 0px 1px;" title="数量：' + old_word + '">' + new_word + '</span>';
     elif error_kind == '细化':
-        tohtml = '<span style="background-color:MediumOrchid; margin: 0px 1px;" title=细化：' + old_word + '>' + new_word + '</span>';
+        tohtml = '<span style="background-color:MediumOrchid; margin: 0px 1px;" title="细化：' + old_word + '">' + new_word + '</span>';
 
     return tohtml
 
