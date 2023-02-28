@@ -470,7 +470,7 @@
       document.getElementById('old_zh').innerHTML = document.getElementById('zh').innerHTML;
       $('#submit_zh').removeClass("layui-btn-disabled");
       $('#save_fix').addClass("layui-btn-disabled");
-      document.getElementById('zh').contenteditable = true;
+      $("#zh").attr('contenteditable', true);
       return false; // 禁止刷新页面
     });
 
