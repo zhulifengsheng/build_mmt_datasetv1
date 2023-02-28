@@ -116,8 +116,13 @@
               style="width: 170px; margin-bottom: 0px; background-color: #009688; color: white; height: 40px;">请看图片标注译文</label>
 
             <div class="layui-input-block">
+              {% if annoted_flag %}
               <div id="zh" onmouseup="fix_mouseUp_zh()" contenteditable="true"
                 style="height: 100px; border: 2px solid black; font-size: 18px; border-color: rgb(162, 156, 156);">{{ zh }}</div>
+              {% else %}
+              <div id="zh" onmouseup="fix_mouseUp_zh()" contenteditable="false"
+                style="height: 100px; border: 2px solid black; font-size: 18px; border-color: rgb(162, 156, 156);">{{ zh }}</div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -126,17 +131,18 @@
           <!-- 修正结束按钮 -->
           <div class="layui-form-item" style="text-align: center; margin-top: 40px;">
             {% if annoted_flag %}
-              <button id="save_fix" class="layui-btn layui-btn-disabled">修正结束</button>
+            <button id="save_fix" class="layui-btn layui-btn-disabled">修正结束</button>
             {% else %}
-              <button id="save_fix" class="layui-btn">修正结束</button>
+            <button id="save_fix" class="layui-btn">修正结束</button>
             {% endif %}
           </div>
           <!-- 提交译文按钮 -->
           <div class="layui-form-item" style="text-align: center;">
             {% if annoted_flag %}
-              <button id="submit_zh" type="submit" class="layui-btn" lay-submit="" lay-filter="demo2">提交译文</button>
+            <button id="submit_zh" type="submit" class="layui-btn" lay-submit="" lay-filter="demo2">提交译文</button>
             {% else %}
-              <button id="submit_zh" type="submit" class="layui-btn layui-btn-disabled" lay-submit="" lay-filter="demo2">提交译文</button>
+            <button id="submit_zh" type="submit" class="layui-btn layui-btn-disabled" lay-submit=""
+              lay-filter="demo2">提交译文</button>
             {% endif %}
           </div>
         </div>
@@ -384,6 +390,10 @@
       $('#fix_input').val("");
       $('#fix_p').val("");
       $('#fix_select').val("");
+
+      // 重置两个提交按钮
+      $('#submit_zh').addClass("layui-btn-disabled");
+      $('#save_fix').removeClass("layui-btn-disabled");
     }
 
     // 删除修正
@@ -420,6 +430,10 @@
       $('#fix_input').val("");
       $('#fix_p').val("");
       $('#fix_select').val("");
+
+      // 重置两个提交按钮
+      $('#submit_zh').addClass("layui-btn-disabled");
+      $('#save_fix').removeClass("layui-btn-disabled");
     }
 
     // 字符串查找
@@ -456,6 +470,7 @@
       document.getElementById('old_zh').innerHTML = document.getElementById('zh').innerHTML;
       $('#submit_zh').removeClass("layui-btn-disabled");
       $('#save_fix').addClass("layui-btn-disabled");
+      document.getElementById('zh').contenteditable = true;
       return false; // 禁止刷新页面
     });
 
