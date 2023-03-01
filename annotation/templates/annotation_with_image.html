@@ -98,10 +98,17 @@
 
             <!-- 保存和删除按钮 -->
             <div style="margin-left: 5%; display: inline; vertical-align: bottom;">
-              <button type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
+              {% if annoted_flag %}
+              <button id="fix_add" type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius layui-btn-disabled"
+                onclick="fix_addlabel()" disabled>添加修正</button>
+              <button id="fix_del" type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius layui-btn-disabled"
+                onclick="fix_dellabel()" disabled>删除修正</button>
+              {% else %}
+              <button id="fix_add" type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
                 onclick="fix_addlabel()">添加修正</button>
-              <button type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
+              <button id="fix_del" type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
                 onclick="fix_dellabel()">删除修正</button>
+              {% endif %}
             </div>
           </div>
 
@@ -128,8 +135,11 @@
         </div>
 
         <div class="layui-col-md3">
+          <div class="layui-form-item" style="text-align: center;">
+            <button id="reset" class="layui-btn layui-btn-normal">重置</button>
+          </div>
           <!-- 修正结束按钮 -->
-          <div class="layui-form-item" style="text-align: center; margin-top: 40px;">
+          <div class="layui-form-item" style="text-align: center;">
             {% if annoted_flag %}
             <button id="save_fix" class="layui-btn layui-btn-disabled" disabled>修正结束</button>
             {% else %}
@@ -460,10 +470,46 @@
     // 保存修正按钮
     $('#save_fix').on('click', function () {
       document.getElementById('old_zh').innerHTML = document.getElementById('zh').innerHTML;
+      
+      // 开启 提交译文按钮
       $('#submit_zh').removeClass("layui-btn-disabled");
+      
+      // 禁用 保存修正按钮
       $('#save_fix').addClass("layui-btn-disabled");
       $("#save_fix").attr("disabled", true);
+      
+      // 开启 译文编辑
       $("#zh").attr('contenteditable', true);
+
+      // 禁用 添加修正和删除修正按钮
+      $('#fix_add').addClass("layui-btn-disabled");
+      $("#fix_add").attr("disabled", true);
+      $('#fix_del').addClass("layui-btn-disabled");
+      $("#fix_del").attr("disabled", true);
+      
+      return false; // 禁止刷新页面
+    });
+
+    // 保存修正按钮
+    $('#reset').on('click', function () {
+      document.getElementById('zh').innerHTML = '{{ zh_without_image }}';
+
+      // 禁用 提交译文按钮
+      $('#submit_zh').addClass("layui-btn-disabled");
+
+      // 开启 保存修正按钮
+      $('#save_fix').removeClass("layui-btn-disabled");
+      $("#save_fix").attr("disabled", false);
+
+      // 禁用 译文编辑
+      $("#zh").attr('contenteditable', false);
+
+      // 开启 添加修正和删除修正按钮
+      $('#fix_add').removeClass("layui-btn-disabled");
+      $("#fix_add").attr("disabled", false);
+      $('#fix_del').removeClass("layui-btn-disabled");
+      $("#fix_del").attr("disabled", false);
+
       return false; // 禁止刷新页面
     });
 
