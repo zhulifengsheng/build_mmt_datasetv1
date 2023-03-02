@@ -99,8 +99,8 @@ def show_management_table(request):
             dic['username'] = user_obj.username
             dic['first1'] = user_obj.now_index_without_image - 1
             dic['first2']  = get_total_amount_without_image(user_obj) - dic['first1']
-            dic['second1'] = get_isnot_finished_amout(user_obj)
-            dic['second2']  = get_total_amount_with_image(user_obj) - dic['second1']
+            dic['second2'] = get_isnot_finished_amout(user_obj)
+            dic['second1']  = get_total_amount_with_image(user_obj) - dic['second2']
             data.append(dic)
         
         context = {
