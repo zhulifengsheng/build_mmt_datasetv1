@@ -15,7 +15,7 @@ Including another URLconf
 """
 # from django.contrib import admin
 from django.urls import path
-from annotation.views import show, api, first_page, management, annot
+from annotation.views import show, api, first_page, management, annot, output_annotation
 
 urlpatterns = [
     # 网址
@@ -24,7 +24,9 @@ urlpatterns = [
     path('annotation_without_image/<int:index_without_image>/', annot.annotation_without_image),
     path('annotation_with_image/<int:index_with_image>/', annot.annotation_with_image),
     path('management/', management.management),
-    # path('check_annotation/', ),
+
+    # 输出标注信息到JSON
+    path('output_annotation/', output_annotation.output_annotation),
 
     # API
     path('api/login/', api.login),
