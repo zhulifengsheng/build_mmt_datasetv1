@@ -69,7 +69,7 @@
             </div>
           </div>
 
-          <!-- 显示划中单词，进行修正 -->
+          <!-- 显示划中单词，进行修改 -->
           <div class="layui-input-block"
             style="text-align: center; margin-left: 0px; margin-top: 40px; margin-bottom: 0px;">
             <!-- 显示区 -->
@@ -78,7 +78,7 @@
 
             <!-- 下拉菜单 -->
             <div style="display: inline; margin-left: 5%; vertical-align: bottom;">
-              <label style="font-size: 18px; display: inline;">修正类型</label>
+              <label style="font-size: 18px; display: inline;">修改类型</label>
               <select id="fix_select" lay-ignore style="display: inline; margin-left: 2%; height: 25px;">
                 <option value=""></option>
                 <option value="0" style="color: HotPink;">名词</option>
@@ -93,21 +93,21 @@
           <div class="layui-input-block"
             style="text-align: center; margin-left: 0px; margin-top: 30px; margin-bottom: 0px;">
             <!-- 输入区 -->
-            <input id="fix_input" type="text" placeholder="请输入修正后的词" class="layui-input"
+            <input id="fix_input" type="text" placeholder="请输入修改后的词" class="layui-input"
               style="display: inline; width: 200px; height: 40px;">
 
             <!-- 保存和删除按钮 -->
             <div style="margin-left: 5%; display: inline; vertical-align: bottom;">
               {% if annoted_flag %}
               <button id="fix_add" type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius layui-btn-disabled"
-                onclick="fix_addlabel()" disabled>添加修正</button>
+                onclick="fix_addlabel()" disabled>添加修改</button>
               <button id="fix_del" type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius layui-btn-disabled"
-                onclick="fix_dellabel()" disabled>删除修正</button>
+                onclick="fix_dellabel()" disabled>删除修改</button>
               {% else %}
               <button id="fix_add" type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
-                onclick="fix_addlabel()">添加修正</button>
+                onclick="fix_addlabel()">添加修改</button>
               <button id="fix_del" type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-btn-radius"
-                onclick="fix_dellabel()">删除修正</button>
+                onclick="fix_dellabel()">删除修改</button>
               {% endif %}
             </div>
           </div>
@@ -138,12 +138,12 @@
           <div class="layui-form-item" style="text-align: center;">
             <button id="reset" class="layui-btn layui-btn-normal">重置</button>
           </div>
-          <!-- 修正结束按钮 -->
+          <!-- 修改结束按钮 -->
           <div class="layui-form-item" style="text-align: center;">
             {% if annoted_flag %}
-            <button id="save_fix" class="layui-btn layui-btn-disabled" disabled>修正结束</button>
+            <button id="save_fix" class="layui-btn layui-btn-disabled" disabled>修改结束</button>
             {% else %}
-            <button id="save_fix" class="layui-btn">修正结束</button>
+            <button id="save_fix" class="layui-btn">修改结束</button>
             {% endif %}
           </div>
           <!-- 提交译文按钮 -->
@@ -158,7 +158,7 @@
         </div>
       </div>
 
-      <!-- 隐藏的输入，单纯修正之后的译文 -->
+      <!-- 隐藏的输入，单纯修改之后的译文 -->
       <p id="old_zh" hidden>{{ zh }}</p>
 
     </form>
@@ -328,10 +328,10 @@
       }
     }
 
-    // 添加修正
+    // 添加修改
     function fix_addlabel() {
       if (huazhong_html_dom.parentNode.style.getPropertyValue('background-color') != '') {  // span区域才有style background-color
-        alert('此处已添加过修正, 无法继续添加');
+        alert('此处已添加过修改, 无法继续添加');
         return;
       }
 
@@ -343,11 +343,11 @@
         return;
       }
       if (_input == '') {
-        alert("还没有修正呢~");
+        alert("还没有修改呢~");
         return;
       }
       if (options.val() == '') {
-        alert("还没有选择修正类型呢~");
+        alert("还没有选择修改类型呢~");
         return;
       }
 
@@ -402,11 +402,11 @@
       $('#fix_select').val("");
     }
 
-    // 删除修正
+    // 删除修改
     function fix_dellabel() {
       var tmp = huazhong_html_dom.parentNode;
       if (tmp.style.getPropertyValue('background-color') == '') {  // span区域才有style background-color
-        alert('此处没有添加修正, 无法删除');
+        alert('此处没有添加修改, 无法删除');
         return;
       }
 
@@ -424,7 +424,7 @@
 
       var pre_substr = origin_html.substr(0, pre_idx); // 划中区域前面的子串
 
-      // 得到修正之前的原文本
+      // 得到修改之前的原文本
       var old_word = get_hidden_text(origin_html.substr(pre_idx))[0];
 
       var post_substr = origin_html.substr(pre_idx).replace(/<span (.*?)<\/span>/, old_word);  // 划中区域后面的子串
@@ -467,21 +467,21 @@
       return old_word;
     }
 
-    // 保存修正按钮
+    // 保存修改按钮
     $('#save_fix').on('click', function () {
       document.getElementById('old_zh').innerHTML = document.getElementById('zh').innerHTML;
       
       // 开启 提交译文按钮
       $('#submit_zh').removeClass("layui-btn-disabled");
       
-      // 禁用 保存修正按钮
+      // 禁用 保存修改按钮
       $('#save_fix').addClass("layui-btn-disabled");
       $("#save_fix").attr("disabled", true);
       
       // 开启 译文编辑
       $("#zh").attr('contenteditable', true);
 
-      // 禁用 添加修正和删除修正按钮
+      // 禁用 添加修改和删除修改按钮
       $('#fix_add').addClass("layui-btn-disabled");
       $("#fix_add").attr("disabled", true);
       $('#fix_del').addClass("layui-btn-disabled");
@@ -490,21 +490,21 @@
       return false; // 禁止刷新页面
     });
 
-    // 保存修正按钮
+    // 保存修改按钮
     $('#reset').on('click', function () {
       document.getElementById('zh').innerHTML = '{{ zh_without_image }}';
 
       // 禁用 提交译文按钮
       $('#submit_zh').addClass("layui-btn-disabled");
 
-      // 开启 保存修正按钮
+      // 开启 保存修改按钮
       $('#save_fix').removeClass("layui-btn-disabled");
       $("#save_fix").attr("disabled", false);
 
       // 禁用 译文编辑
       $("#zh").attr('contenteditable', false);
 
-      // 开启 添加修正和删除修正按钮
+      // 开启 添加修改和删除修改按钮
       $('#fix_add').removeClass("layui-btn-disabled");
       $("#fix_add").attr("disabled", false);
       $('#fix_del').removeClass("layui-btn-disabled");
